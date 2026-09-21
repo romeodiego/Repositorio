@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bitácora de Mantenimientos · VNT</title>
+<style>
+  :root{
+    --primary:#073b4c;
+    --primary-dark:#052a37;
+    --primary-light:#118ab2;
+    --accent:#06d6a0;
+    --accent-dark:#049c74;
+    --warning:#f4a261;
+    --danger:#ef476f;
+    --bg:#eef3f6;
+    --card:#ffffff;
+    --border:#dbe4ea;
+    --text:#1c2e35;
+    --text-muted:#5b7480;
+    --radius:10px;
+    --shadow:0 2px 10px rgba(7,59,76,0.08);
+    --shadow-lg:0 12px 32px rgba(7,59,76,0.22);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+  }
+
+  /* ---------- HEADER ---------- */
+  header.app-header{
+    background:linear-gradient(120deg,var(--primary) 0%,var(--primary-dark) 100%);
+    color:#fff;
+    padding:16px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    box-shadow:var(--shadow);
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand svg{flex-shrink:0;display:block;}
+  .brand-text h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.3px;}
+  .brand-text p{margin:2px 0 0;font-size:12.5px;color:#bfe3ee;}
+  .header-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+  /* ---------- BUTTONS ---------- */
+  button{
+    font-family:inherit;
+    cursor:pointer;
+    border:none;
+    border-radius:8px;
+    font-size:13.5px;
+    padding:9px 16px;
+    transition:background .15s ease,transform .05s ease,box-shadow .15s ease;
+    font-weight:600;
+  }
+  button:active{transform:translateY(1px);}
+  .btn-primary{background:var(--accent);color:#04302a;}
+  .btn-primary:hover{background:var(--accent-dark);color:#fff;}
+  .btn-outline{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.4);}
+  .btn-outline:hover{background:rgba(255,255,255,0.22);}
+  .btn-light{background:#fff;color:var(--primary);border:1px solid var(--border);}
+  .btn-light:hover{background:#f2f7f9;}
+  .btn-danger{background:#fdecef;color:var(--danger);}
+  .btn-danger:hover{background:var(--danger);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--primary-light);padding:6px 10px;}
+  .btn-ghost:hover{background:#eaf6f9;}
+  .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
+  button:disabled{opacity:.45;cursor:not-allowed;}
+
+  /* ---------- NAV TABS ---------- */
+  nav.view-tabs{
+    max-width:1240px;margin:18px auto 0;padding:0 20px;
+    display:flex;gap:8px;
+  }
+  nav.view-tabs button{
+    background:#fff;color:var(--text-muted);border:1px solid var(--border);
+    border-bottom:none;border-radius:10px 10px 0 0;padding:10px 22px;
+  }
+  nav.view-tabs button.active{
+    background:var(--card);color:var(--primary);border-color:var(--border);
+    box-shadow:0 -2px 0 var(--primary-light) inset;
+  }
+
+  main{max-width:1240px;margin:0 auto;padding:0 20px 60px;}
+  .panel{
+    background:var(--card);border:1px solid var(--border);border-radius:0 10px 10px 10px;
+    box-shadow:var(--shadow);padding:22px;margin-top:0;
+  }
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ---------- CALENDAR TOOLBAR ---------- */
+  .cal-toolbar{
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    margin-bottom:16px;
+  }
+  .cal-nav{display:flex;align-items:center;gap:10px;}
+  .cal-nav h2{margin:0;font-size:18px;min-width:190px;text-align:center;color:var(--primary);text-transform:capitalize;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--text-muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+  /* ---------- CALENDAR GRID ---------- */
+  .cal-grid{
+    display:grid;grid-template-columns:repeat(7,1fr);
+    border:1px solid var(--border);border-radius:8px;overflow:hidden;
+  }
+  .cal-weekday{
+    background:var(--primary);color:#fff;text-align:center;padding:8px 4px;
+    font-size:12px;font-weight:700;letter-spacing:.4px;
+  }
+  .cal-cell{
+    background:#fff;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+    min-height:110px;padding:6px;position:relative;display:flex;flex-direction:column;gap:4px;
+  }
+  .cal-cell:nth-child(7n){border-right:none;}
+  .cal-cell.other-month{background:#f7fafb;}
+  .cal-cell.other-month .cal-daynum{color:#b7c4cb;}
+  .cal-cell.today{background:#fff8ec;}
+  .cal-cell.today .cal-daynum{
+    background:var(--warning);color:#fff;border-radius:50%;
+  }
+  .cal-daynum{
+    width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+    font-size:12.5px;font-weight:700;color:var(--text-muted);
+  }
+  .cal-add{
+    position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:6px;
+    background:transparent;color:var(--primary-light);font-size:15px;line-height:1;
+    display:flex;align-items:center;justify-content:center;padding:0;opacity:0;
+    transition:opacity .12s;
+  }
+  .cal-cell:hover .cal-add{opacity:1;background:#eaf6f9;}
+  .cal-events{display:flex;flex-direction:column;gap:3px;overflow:hidden;}
+  .cal-chip{
+    font-size:11px;padding:3px 6px;border-radius:5px;color:#fff;cursor:pointer;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid rgba(0,0,0,0.15);
+    user-select:none;
+  }
+  .cal-chip.tipo-preventivo{background:var(--accent-dark);}
+  .cal-chip.tipo-correctivo{background:var(--danger);}
+  .cal-more{font-size:11px;color:var(--primary-light);cursor:pointer;font-weight:600;padding-left:2px;}
+
+  /* ---------- LIST VIEW ---------- */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:11.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;}
+  input,select,textarea{
+    font-family:inherit;font-size:13.5px;padding:8px 10px;border:1px solid var(--border);
+    border-radius:7px;background:#fff;color:var(--text);
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--primary-light);outline-offset:1px;}
+  .list-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;}
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:920px;}
+  thead th{
+    background:var(--primary);color:#fff;text-align:left;padding:10px 12px;font-size:12px;
+    text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;
+  }
+  tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tbody tr:hover{background:#f5fafb;}
+  tbody tr:last-child td{border-bottom:none;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;}
+  .badge.preventivo{background:var(--accent-dark);}
+  .badge.correctivo{background:var(--danger);}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .empty-state{text-align:center;padding:40px 10px;color:var(--text-muted);}
+  .empty-state svg{opacity:.5;margin-bottom:10px;}
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(7,20,26,0.55);display:none;
+    align-items:flex-start;justify-content:center;padding:30px 16px;overflow-y:auto;z-index:100;
+  }
+  .overlay.active{display:flex;}
+  .modal{
+    background:#fff;border-radius:12px;max-width:680px;width:100%;box-shadow:var(--shadow-lg);
+    animation:pop .15s ease-out;
+  }
+  @keyframes pop{from{transform:translateY(-8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .modal-header{
+    display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
+    border-bottom:1px solid var(--border);
+  }
+  .modal-header h3{margin:0;font-size:17px;color:var(--primary);}
+  .modal-close{background:transparent;color:var(--text-muted);font-size:20px;padding:2px 8px;}
+  .modal-close:hover{background:#f1f5f7;}
+  .modal-body{padding:20px 22px;max-height:70vh;overflow-y:auto;}
+  .modal-footer{
+    padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:space-between;
+    gap:10px;flex-wrap:wrap;
+  }
+  .modal-footer .right{display:flex;gap:8px;flex-wrap:wrap;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-grid .full{grid-column:1 / -1;}
+  .form-grid label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:5px;}
+  .form-grid textarea{width:100%;resize:vertical;min-height:64px;}
+  .form-grid input,.form-grid select{width:100%;}
+  .radio-group{display:flex;gap:16px;padding:8px 0;}
+  .radio-group label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;}
+  .radio-group input{width:auto;}
+  .hint{font-size:11.5px;color:var(--text-muted);margin-top:4px;}
+
+  footer.app-footer{
+    text-align:center;padding:22px 10px;color:var(--text-muted);font-size:12px;
+  }
+
+  @media (max-width:720px){
+    .form-grid{grid-template-columns:1fr;}
+    .cal-cell{min-height:84px;}
+    .brand-text h1{font-size:16px;}
+  }
+
+  /* ---------- PRINT ---------- */
+  #printArea{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{
+      display:block !important;
+      position:absolute;top:0;left:0;width:100%;padding:20px;
+    }
+    .print-header{display:flex;align-items:center;gap:14px;border-bottom:3px solid #073b4c;padding-bottom:12px;margin-bottom:18px;}
+    .print-header h1{font-size:18px;margin:0;color:#073b4c;}
+    .print-header p{margin:2px 0 0;font-size:11px;color:#5b7480;}
+    .print-title{font-size:15px;font-weight:700;margin:14px 0 10px;color:#073b4c;}
+    .print-table{width:100%;border-collapse:collapse;font-size:11.5px;}
+    .print-table th,.print-table td{border:1px solid #ccc;padding:6px 8px;text-align:left;vertical-align:top;}
+    .print-table th{background:#eef3f6;}
+    .print-grid{width:100%;border-collapse:collapse;margin-bottom:10px;}
+    .print-grid td{border:1px solid #ccc;padding:7px 10px;font-size:12px;vertical-align:top;}
+    .print-grid td.k{font-weight:700;background:#f5f8f9;width:190px;color:#073b4c;}
+    .print-footer{margin-top:22px;font-size:10.5px;color:#5b7480;text-align:right;}
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <svg width="46" height="46" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="32" cy="32" r="31" fill="#0b4f66" stroke="#06d6a0" stroke-width="2"/>
+      <path d="M6 40c5-6 11-6 16 0s11 6 16 0 11-6 16 0" fill="none" stroke="#8fe3d6" stroke-width="3" stroke-linecap="round"/>
+      <path d="M6 48c5-6 11-6 16 0s11 6 16 0 11-6 16 0" fill="none" stroke="#118ab2" stroke-width="3" stroke-linecap="round"/>
+      <circle cx="32" cy="20" r="6.5" fill="#ffd166" stroke="#0b4f66" stroke-width="1.5"/>
+      <path d="M32 20 v-10" stroke="#ffd166" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div class="brand-text">
+      <h1>Bitácora de Mantenimientos — VNT</h1>
+      <p>Vía Navegable Troncal · Equipamiento de monitoreo y control</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-outline" id="btnClearAll" title="Borrar todos los registros almacenados en este navegador">Vaciar bitácora</button>
+    <button class="btn-primary" id="btnNew">+ Nuevo mantenimiento</button>
+  </div>
+</header>
+
+<nav class="view-tabs">
+  <button id="tabCalendar" class="active" data-view="calendar">📅 Calendario</button>
+  <button id="tabList" data-view="list">📋 Listado</button>
+</nav>
+
+<main>
+  <!-- ================= CALENDAR VIEW ================= -->
+  <section class="view active panel" id="viewCalendar">
+    <div class="cal-toolbar">
+      <div class="cal-nav">
+        <button class="btn-light btn-sm" id="btnPrevMonth">‹ Mes anterior</button>
+        <h2 id="calTitle">—</h2>
+        <button class="btn-light btn-sm" id="btnNextMonth">Mes siguiente ›</button>
+        <button class="btn-ghost btn-sm" id="btnToday">Hoy</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:#049c74"></i> Preventivo</span>
+        <span><i class="dot" style="background:#ef476f"></i> Correctivo</span>
+      </div>
+    </div>
+    <div class="cal-grid" id="calGrid"><!-- generado por JS --></div>
+    <p class="hint">Doble clic sobre un mantenimiento para ver el detalle y editarlo. Doble clic sobre un día vacío para crear uno nuevo en esa fecha.</p>
+  </section>
+
+  <!-- ================= LIST VIEW ================= -->
+  <section class="view panel" id="viewList">
+    <div class="filters">
+      <div class="field">
+        <label for="fSearch">Buscar</label>
+        <input type="text" id="fSearch" placeholder="Proveedor, inspector, responsable...">
+      </div>
+      <div class="field">
+        <label for="fTipoMant">Tipo de mantenimiento</label>
+        <select id="fTipoMant">
+          <option value="">Todos</option>
+          <option value="Preventivo">Preventivo</option>
+          <option value="Correctivo">Correctivo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fTipoEquipo">Tipo de equipamiento</label>
+        <select id="fTipoEquipo">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="fDesde">Desde</label>
+        <input type="date" id="fDesde">
+      </div>
+      <div class="field">
+        <label for="fHasta">Hasta</label>
+        <input type="date" id="fHasta">
+      </div>
+      <div class="field">
+        <button class="btn-light" id="btnClearFilters">Limpiar filtros</button>
+      </div>
+    </div>
+
+    <div class="list-toolbar">
+      <span id="listCount" class="hint"></span>
+      <button class="btn-light" id="btnPdfList">⬇ Descargar reporte (PDF)</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Equipamiento</th>
+            <th>Proveedor</th>
+            <th>Responsable VNA</th>
+            <th>Inspector</th>
+            <th>Nota de pedido</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div>No hay mantenimientos registrados con estos filtros.</div>
+    </div>
+  </section>
+</main>
+
+<footer class="app-footer">
+  Sistema interno de gestión de mantenimientos · Vía Navegable Troncal (VNT) · Los datos se guardan localmente en este navegador.
+</footer>
+
+<!-- ================= MODAL FORM ================= -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nuevo mantenimiento</h3>
+      <button class="modal-close" id="btnCloseModal">✕</button>
+    </div>
+    <form id="maintForm">
+      <div class="modal-body">
+        <input type="hidden" id="fId">
+        <div class="form-grid">
+          <div class="full">
+            <label>Tipo de mantenimiento *</label>
+            <div class="radio-group">
+              <label><input type="radio" name="tipoMantenimiento" value="Preventivo" required> Preventivo</label>
+              <label><input type="radio" name="tipoMantenimiento" value="Correctivo" required> Correctivo</label>
+            </div>
+          </div>
+
+          <div>
+            <label for="fFecha">Fecha de realización *</label>
+            <input type="date" id="fFecha" required>
+          </div>
+          <div>
+            <label for="fProveedor">Proveedor *</label>
+            <input type="text" id="fProveedor" placeholder="Nombre del proveedor" required>
+          </div>
+
+          <div class="full">
+            <label for="fTipo">Tipo de equipamiento *</label>
+            <select id="fTipo" required>
+              <option value="" disabled selected>Seleccionar...</option>
+              <option>Centro de Monitoreo</option>
+              <option>Punto de Monitoreo Remoto</option>
+              <option>Equipamiento de Campo</option>
+              <option>Boyas Multiparamétricas</option>
+              <option>SiMon</option>
+            </select>
+          </div>
+
+          <div class="full">
+            <label for="fDescripcion">Descripción del mantenimiento *</label>
+            <textarea id="fDescripcion" placeholder="Detalle las tareas realizadas..." required></textarea>
+          </div>
+
+          <div>
+            <label for="fResponsable">Responsable VNA *</label>
+            <input type="text" id="fResponsable" placeholder="Nombre del responsable" required>
+          </div>
+          <div>
+            <label for="fInspector">Inspector</label>
+            <input type="text" id="fInspector" placeholder="Nombre del inspector">
+          </div>
+
+          <div>
+            <label for="fNota">Nota de pedido</label>
+            <input type="text" id="fNota" placeholder="N° de nota de pedido">
+          </div>
+          <div></div>
+
+          <div class="full">
+            <label for="fComentarios">Comentarios</label>
+            <textarea id="fComentarios" placeholder="Observaciones adicionales..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="left">
+          <button type="button" class="btn-danger" id="btnDelete" style="display:none;">Eliminar</button>
+        </div>
+        <div class="right">
+          <button type="button" class="btn-light" id="btnPdfSingle" style="display:none;">⬇ Descargar PDF</button>
+          <button type="button" class="btn-light" id="btnCancel">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= PRINT AREA (oculto, solo visible al imprimir) ================= -->
+<div id="printArea"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "vnt_mantenimientos_v1";
+  var TIPOS_EQUIPO = ["Centro de Monitoreo","Punto de Monitoreo Remoto","Equipamiento de Campo","Boyas Multiparamétricas","SiMon"];
+
+  var els = {};
+  ["btnClearAll","btnNew","tabCalendar","tabList","viewCalendar","viewList",
+   "btnPrevMonth","btnNextMonth","btnToday","calTitle","calGrid",
+   "fSearch","fTipoMant","fTipoEquipo","fDesde","fHasta","btnClearFilters",
+   "listCount","btnPdfList","tableBody","emptyState",
+   "overlay","modalTitle","btnCloseModal","maintForm","fId","fFecha","fProveedor",
+   "fTipo","fDescripcion","fResponsable","fInspector","fNota","fComentarios",
+   "btnDelete","btnPdfSingle","btnCancel","printArea"
+  ].forEach(function(id){ els[id] = document.getElementById(id); });
+
+  var state = {
+    records: loadRecords(),
+    calYear: (new Date()).getFullYear(),
+    calMonth: (new Date()).getMonth(),
+    editingId: null,
+    view: "calendar"
+  };
+
+  // ---------- populate tipo-equipo filter ----------
+  TIPOS_EQUIPO.forEach(function(t){
+    var o = document.createElement("option");
+    o.value = t; o.textContent = t;
+    els.fTipoEquipo.appendChild(o);
+  });
+
+  // ---------- storage ----------
+  function loadRecords(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return seedData();
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){
+      console.error("Error leyendo almacenamiento local", e);
+      return [];
+    }
+  }
+
+  function saveRecords(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+  }
+
+  function seedData(){
+    var today = new Date();
+    function iso(y,m,d){ return new Date(y,m,d).toISOString().slice(0,10); }
+    var seed = [
+      {
+        id: uid(), tipoMantenimiento:"Preventivo",
+        proveedor:"Hidrotec SRL", fecha: iso(today.getFullYear(), today.getMonth(), 8),
+        descripcion:"Limpieza de sensores y calibración de sonda multiparamétrica.",
+        tipoEquipo:"Boyas Multiparamétricas", responsableVNA:"Juan Pérez",
+        notaPedido:"NP-2026-0142", inspector:"María Gómez",
+        comentarios:"Sin novedades. Próxima calibración en 6 meses."
+      },
+      {
+        id: uid(), tipoMantenimiento:"Correctivo",
+        proveedor:"Telecom Fluvial SA", fecha: iso(today.getFullYear(), today.getMonth(), 14),
+        descripcion:"Reemplazo de módulo de comunicación satelital dañado por tormenta.",
+        tipoEquipo:"Punto de Monitoreo Remoto", responsableVNA:"Laura Díaz",
+        notaPedido:"NP-2026-0139", inspector:"Carlos Ruiz",
+        comentarios:"Se solicitó repuesto de emergencia al proveedor."
+      },
+      {
+        id: uid(), tipoMantenimiento:"Preventivo",
+        proveedor:"Sistemas de Monitoreo VNA", fecha: iso(today.getFullYear(), today.getMonth(), 22),
+        descripcion:"Mantenimiento programado de servidores y UPS del centro de monitoreo.",
+        tipoEquipo:"Centro de Monitoreo", responsableVNA:"Juan Pérez",
+        notaPedido:"", inspector:"María Gómez",
+        comentarios:""
+      }
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+    return seed;
+  }
+
+  function uid(){
+    return "m_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+  }
+
+  // ---------- helpers ----------
+  function fmtDate(iso){
+    if(!iso) return "";
+    var p = iso.split("-");
+    return p[2] + "/" + p[1] + "/" + p[0];
+  }
+  function esc(s){
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function badgeClass(tipo){ return tipo === "Correctivo" ? "correctivo" : "preventivo"; }
+  function chipClass(tipo){ return tipo === "Correctivo" ? "tipo-correctivo" : "tipo-preventivo"; }
+
+  var MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  var WEEKDAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+  // ---------- view switching ----------
+  function switchView(view){
+    state.view = view;
+    els.viewCalendar.classList.toggle("active", view === "calendar");
+    els.viewList.classList.toggle("active", view === "list");
+    els.tabCalendar.classList.toggle("active", view === "calendar");
+    els.tabList.classList.toggle("active", view === "list");
+    if(view === "calendar") renderCalendar(); else renderList();
+  }
+  els.tabCalendar.addEventListener("click", function(){ switchView("calendar"); });
+  els.tabList.addEventListener("click", function(){ switchView("list"); });
+
+  // ---------- calendar rendering ----------
+  function renderCalendar(){
+    var y = state.calYear, m = state.calMonth;
+    els.calTitle.textContent = MONTH_NAMES[m] + " " + y;
+
+    var recordsByDate = {};
+    state.records.forEach(function(r){
+      (recordsByDate[r.fecha] = recordsByDate[r.fecha] || []).push(r);
+    });
+
+    var firstOfMonth = new Date(y, m, 1);
+    var startOffset = firstOfMonth.getDay(); // 0=Dom
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var daysInPrevMonth = new Date(y, m, 0).getDate();
+
+    var todayIso = new Date().toISOString().slice(0,10);
+
+    var html = "";
+    WEEKDAYS.forEach(function(w){ html += '<div class="cal-weekday">' + w + '</div>'; });
+
+    var totalCells = 42;
+    var cellDate; // {y,m,d,iso,otherMonth}
+    for(var i=0;i<totalCells;i++){
+      var dayNum, cellMonth, cellYear, otherMonth;
+      if(i < startOffset){
+        dayNum = daysInPrevMonth - startOffset + i + 1;
+        cellMonth = m - 1; cellYear = y; otherMonth = true;
+      } else if(i >= startOffset + daysInMonth){
+        dayNum = i - startOffset - daysInMonth + 1;
+        cellMonth = m + 1; cellYear = y; otherMonth = true;
+      } else {
+        dayNum = i - startOffset + 1;
+        cellMonth = m; cellYear = y; otherMonth = false;
+      }
+      var normDate = new Date(cellYear, cellMonth, dayNum);
+      var iso = normDate.toISOString().slice(0,10);
+      var isToday = iso === todayIso;
+      var dayRecords = (recordsByDate[iso] || []).sort(function(a,b){ return (a.proveedor||"").localeCompare(b.proveedor||""); });
+
+      html += '<div class="cal-cell' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '') + '" data-date="' + iso + '">';
+      html += '<button type="button" class="cal-add" data-newdate="' + iso + '" title="Nuevo mantenimiento en esta fecha">+</button>';
+      html += '<span class="cal-daynum">' + normDate.getDate() + '</span>';
+      html += '<div class="cal-events">';
+      var visible = dayRecords.slice(0,3);
+      visible.forEach(function(r){
+        html += '<div class="cal-chip ' + chipClass(r.tipoMantenimiento) + '" data-id="' + r.id + '" title="' +
+          esc(r.tipoEquipo + " — " + r.proveedor) + '">' + esc(r.tipoEquipo) + ' · ' + esc(r.proveedor) + '</div>';
+      });
+      if(dayRecords.length > 3){
+        html += '<div class="cal-more" data-date="' + iso + '">+' + (dayRecords.length - 3) + ' más</div>';
+      }
+      html += '</div></div>';
+    }
+
+    els.calGrid.innerHTML = html;
+  }
+
+  els.btnPrevMonth.addEventListener("click", function(){
+    state.calMonth--;
+    if(state.calMonth < 0){ state.calMonth = 11; state.calYear--; }
+    renderCalendar();
+  });
+  els.btnNextMonth.addEventListener("click", function(){
+    state.calMonth++;
+    if(state.calMonth > 11){ state.calMonth = 0; state.calYear++; }
+    renderCalendar();
+  });
+  els.btnToday.addEventListener("click", function(){
+    var n = new Date();
+    state.calYear = n.getFullYear(); state.calMonth = n.getMonth();
+    renderCalendar();
+  });
+
+  // calendar delegated events: dblclick on chip -> edit; click "+" -> new; dblclick empty cell -> new; click "+N más" -> open list for day
+  els.calGrid.addEventListener("dblclick", function(e){
+    var chip = e.target.closest(".cal-chip");
+    if(chip){
+      var rec = state.records.find(function(r){ return r.id === chip.dataset.id; });
+      if(rec) openModal(rec);
+      return;
+    }
+    var cell = e.target.closest(".cal-cell");
+    if(cell && !e.target.closest(".cal-more")){
+      openModal(null, cell.dataset.date);
+    }
+  });
+  els.calGrid.addEventListener("click", function(e){
+    var addBtn = e.target.closest(".cal-add");
+    if(addBtn){
+      openModal(null, addBtn.dataset.newdate);
+      return;
+    }
+    var more = e.target.closest(".cal-more");
+    if(more){
+      switchView("list");
+      els.fDesde.value = more.dataset.date;
+      els.fHasta.value = more.dataset.date;
+      renderList();
+    }
+  });
+
+  // ---------- list rendering ----------
+  function getFilteredRecords(){
+    var q = els.fSearch.value.trim().toLowerCase();
+    var tipoMant = els.fTipoMant.value;
+    var tipoEq = els.fTipoEquipo.value;
+    var desde = els.fDesde.value;
+    var hasta = els.fHasta.value;
+
+    return state.records.filter(function(r){
+      if(tipoMant && r.tipoMantenimiento !== tipoMant) return false;
+      if(tipoEq && r.tipoEquipo !== tipoEq) return false;
+      if(desde && r.fecha < desde) return false;
+      if(hasta && r.fecha > hasta) return false;
+      if(q){
+        var haystack = [r.proveedor,r.inspector,r.responsableVNA,r.descripcion,r.comentarios,r.notaPedido,r.tipoEquipo]
+          .join(" ").toLowerCase();
+        if(haystack.indexOf(q) === -1) return false;
+      }
+      return true;
+    }).sort(function(a,b){ return a.fecha < b.fecha ? 1 : (a.fecha > b.fecha ? -1 : 0); });
+  }
+
+  function renderList(){
+    var filtered = getFilteredRecords();
+    els.listCount.textContent = filtered.length + " mantenimiento(s) encontrado(s) de " + state.records.length + " en total.";
+    els.emptyState.style.display = filtered.length ? "none" : "block";
+
+    els.tableBody.innerHTML = filtered.map(function(r){
+      return '<tr data-id="' + r.id + '">' +
+        '<td>' + fmtDate(r.fecha) + '</td>' +
+        '<td><span class="badge ' + badgeClass(r.tipoMantenimiento) + '">' + esc(r.tipoMantenimiento) + '</span></td>' +
+        '<td>' + esc(r.tipoEquipo) + '</td>' +
+        '<td>' + esc(r.proveedor) + '</td>' +
+        '<td>' + esc(r.responsableVNA) + '</td>' +
+        '<td>' + esc(r.inspector) + '</td>' +
+        '<td>' + esc(r.notaPedido) + '</td>' +
+        '<td class="row-actions">' +
+          '<button type="button" class="btn-light btn-sm" data-action="edit" data-id="' + r.id + '">Ver / Editar</button>' +
+          '<button type="button" class="btn-light btn-sm" data-action="pdf" data-id="' + r.id + '">PDF</button>' +
+          '<button type="button" class="btn-danger btn-sm" data-action="del" data-id="' + r.id + '">Eliminar</button>' +
+        '</td>' +
+      '</tr>';
+    }).join("");
+  }
+
+  els.tableBody.addEventListener("dblclick", function(e){
+    var tr = e.target.closest("tr");
+    if(!tr) return;
+    var rec = state.records.find(function(r){ return r.id === tr.dataset.id; });
+    if(rec) openModal(rec);
+  });
+  els.tableBody.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    var rec = state.records.find(function(r){ return r.id === btn.dataset.id; });
+    if(!rec) return;
+    if(btn.dataset.action === "edit") openModal(rec);
+    else if(btn.dataset.action === "pdf") printSingle(rec);
+    else if(btn.dataset.action === "del") deleteRecord(rec.id);
+  });
+
+  [els.fSearch,els.fTipoMant,els.fTipoEquipo,els.fDesde,els.fHasta].forEach(function(el){
+    el.addEventListener("input", renderList);
+    el.addEventListener("change", renderList);
+  });
+  els.btnClearFilters.addEventListener("click", function(){
+    els.fSearch.value = ""; els.fTipoMant.value = ""; els.fTipoEquipo.value = "";
+    els.fDesde.value = ""; els.fHasta.value = "";
+    renderList();
+  });
+
+  // ---------- modal ----------
+  function openModal(record, prefillDate){
+    state.editingId = record ? record.id : null;
+    els.modalTitle.textContent = record ? "Detalle / edición de mantenimiento" : "Nuevo mantenimiento";
+    els.btnDelete.style.display = record ? "inline-block" : "none";
+    els.btnPdfSingle.style.display = record ? "inline-block" : "none";
+    els.maintForm.reset();
+    els.fId.value = record ? record.id : "";
+
+    if(record){
+      els.fFecha.value = record.fecha || "";
+      els.fProveedor.value = record.proveedor || "";
+      els.fTipo.value = record.tipoEquipo || "";
+      els.fDescripcion.value = record.descripcion || "";
+      els.fResponsable.value = record.responsableVNA || "";
+      els.fInspector.value = record.inspector || "";
+      els.fNota.value = record.notaPedido || "";
+      els.fComentarios.value = record.comentarios || "";
+      var radio = els.maintForm.querySelector('input[name="tipoMantenimiento"][value="' + record.tipoMantenimiento + '"]');
+      if(radio) radio.checked = true;
+    } else if(prefillDate){
+      els.fFecha.value = prefillDate;
+    }
+    els.overlay.classList.add("active");
+  }
+  function closeModal(){
+    els.overlay.classList.remove("active");
+    state.editingId = null;
+  }
+  els.btnCloseModal.addEventListener("click", closeModal);
+  els.btnCancel.addEventListener("click", closeModal);
+  els.overlay.addEventListener("click", function(e){ if(e.target === els.overlay) closeModal(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && els.overlay.classList.contains("active")) closeModal(); });
+
+  els.maintForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var tipoMantRadio = els.maintForm.querySelector('input[name="tipoMantenimiento"]:checked');
+    if(!tipoMantRadio){ alert("Seleccione el tipo de mantenimiento (Preventivo o Correctivo)."); return; }
+
+    var data = {
+      id: els.fId.value || uid(),
+      tipoMantenimiento: tipoMantRadio.value,
+      proveedor: els.fProveedor.value.trim(),
+      fecha: els.fFecha.value,
+      descripcion: els.fDescripcion.value.trim(),
+      tipoEquipo: els.fTipo.value,
+      responsableVNA: els.fResponsable.value.trim(),
+      notaPedido: els.fNota.value.trim(),
+      inspector: els.fInspector.value.trim(),
+      comentarios: els.fComentarios.value.trim()
+    };
+
+    var idx = state.records.findIndex(function(r){ return r.id === data.id; });
+    if(idx >= 0) state.records[idx] = data; else state.records.push(data);
+    saveRecords();
+    closeModal();
+    if(state.view === "calendar") renderCalendar(); else renderList();
+  });
+
+  els.btnDelete.addEventListener("click", function(){
+    var id = els.fId.value;
+    if(!id) return;
+    closeModal();
+    deleteRecord(id);
+  });
+
+  function deleteRecord(id){
+    if(!confirm("¿Eliminar este registro de mantenimiento? Esta acción no se puede deshacer.")) return;
+    state.records = state.records.filter(function(r){ return r.id !== id; });
+    saveRecords();
+    if(state.view === "calendar") renderCalendar(); else renderList();
+  }
+
+  els.btnNew.addEventListener("click", function(){ openModal(null); });
+
+  els.btnClearAll.addEventListener("click", function(){
+    if(!confirm("Esto eliminará TODOS los mantenimientos registrados en este navegador. ¿Continuar?")) return;
+    state.records = [];
+    saveRecords();
+    renderCalendar(); renderList();
+  });
+
+  els.btnPdfSingle.addEventListener("click", function(){
+    var id = els.fId.value;
+    var rec = state.records.find(function(r){ return r.id === id; });
+    if(rec) printSingle(rec);
+  });
+  els.btnPdfList.addEventListener("click", function(){ printList(getFilteredRecords()); });
+
+  // ---------- PDF / print ----------
+  function printHeaderHtml(subtitle){
+    return '<div class="print-header">' +
+      '<svg width="42" height="42" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="32" cy="32" r="31" fill="#0b4f66" stroke="#06d6a0" stroke-width="2"/>' +
+      '<path d="M6 40c5-6 11-6 16 0s11 6 16 0 11-6 16 0" fill="none" stroke="#8fe3d6" stroke-width="3" stroke-linecap="round"/>' +
+      '<path d="M6 48c5-6 11-6 16 0s11 6 16 0 11-6 16 0" fill="none" stroke="#118ab2" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="32" cy="20" r="6.5" fill="#ffd166" stroke="#0b4f66" stroke-width="1.5"/>' +
+      '</svg>' +
+      '<div><h1>Bitácora de Mantenimientos — VNT</h1><p>' + esc(subtitle) + '</p></div>' +
+    '</div>';
+  }
+
+  function printSingle(r){
+    var html = printHeaderHtml("Vía Navegable Troncal · Reporte individual de mantenimiento");
+    html += '<div class="print-title">Mantenimiento del ' + fmtDate(r.fecha) + '</div>';
+    html += '<table class="print-grid">' +
+      row("Tipo de mantenimiento", r.tipoMantenimiento) +
+      row("Tipo de equipamiento", r.tipoEquipo) +
+      row("Fecha de realización", fmtDate(r.fecha)) +
+      row("Proveedor", r.proveedor) +
+      row("Descripción", r.descripcion) +
+      row("Responsable VNA", r.responsableVNA) +
+      row("Inspector", r.inspector) +
+      row("Nota de pedido", r.notaPedido) +
+      row("Comentarios", r.comentarios) +
+    '</table>';
+    html += '<div class="print-footer">Generado el ' + new Date().toLocaleString("es-AR") + '</div>';
+    doPrint(html);
+  }
+
+  function printList(list){
+    var html = printHeaderHtml("Vía Navegable Troncal · Reporte de mantenimientos (" + list.length + " registro(s))");
+    html += '<table class="print-table"><thead><tr>' +
+      '<th>Fecha</th><th>Tipo</th><th>Equipamiento</th><th>Proveedor</th>' +
+      '<th>Responsable VNA</th><th>Inspector</th><th>Nota de pedido</th><th>Descripción</th>' +
+    '</tr></thead><tbody>';
+    list.forEach(function(r){
+      html += '<tr>' +
+        '<td>' + fmtDate(r.fecha) + '</td>' +
+        '<td>' + esc(r.tipoMantenimiento) + '</td>' +
+        '<td>' + esc(r.tipoEquipo) + '</td>' +
+        '<td>' + esc(r.proveedor) + '</td>' +
+        '<td>' + esc(r.responsableVNA) + '</td>' +
+        '<td>' + esc(r.inspector) + '</td>' +
+        '<td>' + esc(r.notaPedido) + '</td>' +
+        '<td>' + esc(r.descripcion) + '</td>' +
+      '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div class="print-footer">Generado el ' + new Date().toLocaleString("es-AR") + '</div>';
+    doPrint(html);
+  }
+
+  function row(k,v){
+    return '<tr><td class="k">' + esc(k) + '</td><td>' + esc(v || "-") + '</td></tr>';
+  }
+
+  function doPrint(innerHtml){
+    els.printArea.innerHTML = innerHtml;
+    window.print();
+  }
+  window.addEventListener("afterprint", function(){ els.printArea.innerHTML = ""; });
+
+  // ---------- init ----------
+  renderCalendar();
+  renderList();
+})();
+</script>
+</body>
+</html>
