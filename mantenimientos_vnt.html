@@ -147,6 +147,7 @@
   }
   .cal-chip.tipo-preventivo{background:var(--accent-dark);}
   .cal-chip.tipo-correctivo{background:var(--danger);}
+  .cal-chip.tipo-evolutivo{background:var(--primary-light);}
   .cal-more{font-size:11px;color:var(--primary-light);cursor:pointer;font-weight:600;padding-left:2px;}
 
   /* ---------- LIST VIEW ---------- */
@@ -171,6 +172,7 @@
   .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;}
   .badge.preventivo{background:var(--accent-dark);}
   .badge.correctivo{background:var(--danger);}
+  .badge.evolutivo{background:var(--primary-light);}
   .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
   .empty-state{text-align:center;padding:40px 10px;color:var(--text-muted);}
   .empty-state svg{opacity:.5;margin-bottom:10px;}
@@ -185,6 +187,7 @@
     background:#fff;border-radius:12px;max-width:680px;width:100%;box-shadow:var(--shadow-lg);
     animation:pop .15s ease-out;
   }
+  .modal.modal-sm{max-width:440px;}
   @keyframes pop{from{transform:translateY(-8px);opacity:0;}to{transform:translateY(0);opacity:1;}}
   .modal-header{
     display:flex;align-items:center;justify-content:space-between;padding:18px 22px;
@@ -204,10 +207,20 @@
   .form-grid label{font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:5px;}
   .form-grid textarea{width:100%;resize:vertical;min-height:64px;}
   .form-grid input,.form-grid select{width:100%;}
+  .select-with-add{display:flex;gap:6px;}
+  .select-with-add select{flex:1;min-width:0;}
+  .btn-add-inline{flex-shrink:0;width:36px;padding:0;font-size:17px;line-height:1;background:var(--primary-light);color:#fff;border-radius:7px;}
+  .btn-add-inline:hover{background:var(--primary);}
   .radio-group{display:flex;gap:16px;padding:8px 0;}
   .radio-group label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;}
   .radio-group input{width:auto;}
   .hint{font-size:11.5px;color:var(--text-muted);margin-top:4px;}
+
+  /* ---------- CATALOGOS ---------- */
+  .catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+  .catalog-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;}
+  .catalog-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
+  .catalog-card-header h3{margin:0;font-size:15px;color:var(--primary);}
 
   footer.app-footer{
     text-align:center;padding:22px 10px;color:var(--text-muted);font-size:12px;
@@ -217,6 +230,7 @@
     .form-grid{grid-template-columns:1fr;}
     .cal-cell{min-height:84px;}
     .brand-text h1{font-size:16px;}
+    .catalog-grid{grid-template-columns:1fr;}
   }
 
   /* ---------- PRINT ---------- */
@@ -260,6 +274,7 @@
 <nav class="view-tabs">
   <button id="tabCalendar" class="active" data-view="calendar">📅 Calendario</button>
   <button id="tabList" data-view="list">📋 Listado</button>
+  <button id="tabCatalogos" data-view="catalogos">⚙️ Catálogos</button>
 </nav>
 
 <main>
@@ -275,6 +290,7 @@
       <div class="legend">
         <span><i class="dot" style="background:#049c74"></i> Preventivo</span>
         <span><i class="dot" style="background:#ef476f"></i> Correctivo</span>
+        <span><i class="dot" style="background:#118ab2"></i> Evolutivo</span>
       </div>
     </div>
     <div class="cal-grid" id="calGrid"><!-- generado por JS --></div>
@@ -294,6 +310,7 @@
           <option value="">Todos</option>
           <option value="Preventivo">Preventivo</option>
           <option value="Correctivo">Correctivo</option>
+          <option value="Evolutivo">Evolutivo</option>
         </select>
       </div>
       <div class="field">
@@ -341,6 +358,37 @@
       <div>No hay mantenimientos registrados con estos filtros.</div>
     </div>
   </section>
+
+  <!-- ================= CATALOGOS VIEW ================= -->
+  <section class="view panel" id="viewCatalogos">
+    <div class="catalog-grid">
+      <div class="catalog-card">
+        <div class="catalog-card-header">
+          <h3>Proveedores</h3>
+          <button type="button" class="btn-primary btn-sm" id="btnNewProveedor">+ Nuevo proveedor</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Acciones</th></tr></thead>
+            <tbody id="proveedoresBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="catalog-card">
+        <div class="catalog-card-header">
+          <h3>Tipos de equipamiento</h3>
+          <button type="button" class="btn-primary btn-sm" id="btnNewTipoEquipo">+ Nuevo tipo</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Proveedor habitual</th><th>Acciones</th></tr></thead>
+            <tbody id="tiposEquipoBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Estos catálogos alimentan los combos "Proveedor" y "Tipo de equipamiento" del formulario de mantenimientos. Eliminar un elemento no afecta los registros ya guardados, pero deja de estar disponible para los nuevos.</p>
+  </section>
 </main>
 
 <footer class="app-footer">
@@ -363,6 +411,7 @@
             <div class="radio-group">
               <label><input type="radio" name="tipoMantenimiento" value="Preventivo" required> Preventivo</label>
               <label><input type="radio" name="tipoMantenimiento" value="Correctivo" required> Correctivo</label>
+              <label><input type="radio" name="tipoMantenimiento" value="Evolutivo" required> Evolutivo</label>
             </div>
           </div>
 
@@ -372,19 +421,22 @@
           </div>
           <div>
             <label for="fProveedor">Proveedor *</label>
-            <input type="text" id="fProveedor" placeholder="Nombre del proveedor" required>
+            <div class="select-with-add">
+              <select id="fProveedor" required>
+                <option value="" disabled selected>Seleccionar...</option>
+              </select>
+              <button type="button" class="btn-add-inline" id="btnAddProveedorInline" title="Agregar nuevo proveedor">+</button>
+            </div>
           </div>
 
           <div class="full">
             <label for="fTipo">Tipo de equipamiento *</label>
-            <select id="fTipo" required>
-              <option value="" disabled selected>Seleccionar...</option>
-              <option>Centro de Monitoreo</option>
-              <option>Punto de Monitoreo Remoto</option>
-              <option>Equipamiento de Campo</option>
-              <option>Boyas Multiparamétricas</option>
-              <option>SiMon</option>
-            </select>
+            <div class="select-with-add">
+              <select id="fTipo" required>
+                <option value="" disabled selected>Seleccionar...</option>
+              </select>
+              <button type="button" class="btn-add-inline" id="btnAddTipoInline" title="Agregar nuevo tipo de equipamiento">+</button>
+            </div>
           </div>
 
           <div class="full">
@@ -427,6 +479,42 @@
   </div>
 </div>
 
+<!-- ================= CATALOG MODAL (proveedores / tipos de equipamiento) ================= -->
+<div class="overlay" id="catalogOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="catalogModalTitle">Nuevo proveedor</h3>
+      <button type="button" class="modal-close" id="btnCloseCatalogModal">✕</button>
+    </div>
+    <form id="catalogForm">
+      <div class="modal-body">
+        <input type="hidden" id="catalogKind">
+        <input type="hidden" id="catalogId">
+        <div class="form-grid">
+          <div class="full">
+            <label for="catalogNombre" id="catalogNombreLabel">Nombre *</label>
+            <input type="text" id="catalogNombre" placeholder="Nombre" required>
+          </div>
+          <div class="full" id="catalogProveedorHabitualWrap" style="display:none;">
+            <label for="catalogProveedorHabitual">Proveedor habitual (sugerido)</label>
+            <select id="catalogProveedorHabitual"></select>
+            <p class="hint">Se sugerirá automáticamente al elegir este tipo de equipamiento en un mantenimiento nuevo.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="left">
+          <button type="button" class="btn-danger" id="btnDeleteCatalogItem" style="display:none;">Eliminar</button>
+        </div>
+        <div class="right">
+          <button type="button" class="btn-light" id="btnCancelCatalog">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ================= PRINT AREA (oculto, solo visible al imprimir) ================= -->
 <div id="printArea"></div>
 
@@ -435,37 +523,37 @@
   "use strict";
 
   var STORAGE_KEY = "vnt_mantenimientos_v1";
-  var TIPOS_EQUIPO = ["Centro de Monitoreo","Punto de Monitoreo Remoto","Equipamiento de Campo","Boyas Multiparamétricas","SiMon"];
-  var TIPO_PROVEEDOR = {
-    "Punto de Monitoreo Remoto": "American Consulting",
-    "Boyas Multiparamétricas": "Crux Marine",
-    "Centro de Monitoreo": "Crux Marine"
-  };
+  var PROVIDERS_KEY = "vnt_proveedores_v1";
+  var EQUIPMENT_TYPES_KEY = "vnt_tipos_equipo_v1";
 
   var els = {};
-  ["btnNew","tabCalendar","tabList","viewCalendar","viewList",
+  ["btnNew","tabCalendar","tabList","tabCatalogos","viewCalendar","viewList","viewCatalogos",
    "btnPrevMonth","btnNextMonth","btnToday","calTitle","calGrid",
    "fSearch","fTipoMant","fTipoEquipo","fDesde","fHasta","btnClearFilters",
    "listCount","btnPdfList","tableBody","emptyState",
    "overlay","modalTitle","btnCloseModal","maintForm","fId","fFecha","fProveedor",
    "fTipo","fDescripcion","fResponsable","fInspector","fNota","fComentarios",
-   "btnDelete","btnPdfSingle","btnCancel","printArea"
+   "btnDelete","btnPdfSingle","btnCancel","printArea",
+   "btnAddProveedorInline","btnAddTipoInline",
+   "proveedoresBody","tiposEquipoBody","btnNewProveedor","btnNewTipoEquipo",
+   "catalogOverlay","catalogModalTitle","btnCloseCatalogModal","catalogForm",
+   "catalogKind","catalogId","catalogNombre","catalogNombreLabel",
+   "catalogProveedorHabitualWrap","catalogProveedorHabitual",
+   "btnDeleteCatalogItem","btnCancelCatalog"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 
   var state = {
     records: loadRecords(),
+    providers: loadProviders(),
+    equipmentTypes: loadEquipmentTypes(),
     calYear: (new Date()).getFullYear(),
     calMonth: (new Date()).getMonth(),
     editingId: null,
     view: "calendar"
   };
+  var catalogInlineTarget = null;
 
-  // ---------- populate tipo-equipo filter ----------
-  TIPOS_EQUIPO.forEach(function(t){
-    var o = document.createElement("option");
-    o.value = t; o.textContent = t;
-    els.fTipoEquipo.appendChild(o);
-  });
+  refreshCatalogSelects();
 
   // ---------- storage ----------
   function loadRecords(){
@@ -482,6 +570,55 @@
 
   function saveRecords(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+  }
+
+  function loadProviders(){
+    try{
+      var raw = localStorage.getItem(PROVIDERS_KEY);
+      if(!raw) return seedProviders();
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){
+      console.error("Error leyendo proveedores", e);
+      return [];
+    }
+  }
+  function saveProviders(){
+    localStorage.setItem(PROVIDERS_KEY, JSON.stringify(state.providers));
+  }
+  function seedProviders(){
+    var seed = [
+      { id: uid(), nombre: "Crux Marine" },
+      { id: uid(), nombre: "American Consulting" }
+    ];
+    localStorage.setItem(PROVIDERS_KEY, JSON.stringify(seed));
+    return seed;
+  }
+
+  function loadEquipmentTypes(){
+    try{
+      var raw = localStorage.getItem(EQUIPMENT_TYPES_KEY);
+      if(!raw) return seedEquipmentTypes();
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){
+      console.error("Error leyendo tipos de equipamiento", e);
+      return [];
+    }
+  }
+  function saveEquipmentTypes(){
+    localStorage.setItem(EQUIPMENT_TYPES_KEY, JSON.stringify(state.equipmentTypes));
+  }
+  function seedEquipmentTypes(){
+    var seed = [
+      { id: uid(), nombre: "Centro de Monitoreo", proveedorSugerido: "Crux Marine" },
+      { id: uid(), nombre: "Punto de Monitoreo Remoto", proveedorSugerido: "American Consulting" },
+      { id: uid(), nombre: "Equipamiento de Campo", proveedorSugerido: "" },
+      { id: uid(), nombre: "Boyas Multiparamétricas", proveedorSugerido: "Crux Marine" },
+      { id: uid(), nombre: "SiMon", proveedorSugerido: "" }
+    ];
+    localStorage.setItem(EQUIPMENT_TYPES_KEY, JSON.stringify(seed));
+    return seed;
   }
 
   function seedData(){
@@ -511,6 +648,14 @@
         tipoEquipo:"Centro de Monitoreo", responsableVNA:"Juan Pérez",
         notaPedido:"", inspector:"María Gómez",
         comentarios:""
+      },
+      {
+        id: uid(), tipoMantenimiento:"Evolutivo",
+        proveedor:"American Consulting", fecha: iso(today.getFullYear(), today.getMonth(), 27),
+        descripcion:"Actualización de firmware y ampliación de capacidad de transmisión satelital.",
+        tipoEquipo:"Punto de Monitoreo Remoto", responsableVNA:"Laura Díaz",
+        notaPedido:"NP-2026-0151", inspector:"Carlos Ruiz",
+        comentarios:"Mejora planificada en el marco del plan de modernización tecnológica."
       }
     ];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
@@ -532,8 +677,128 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
-  function badgeClass(tipo){ return tipo === "Correctivo" ? "correctivo" : "preventivo"; }
-  function chipClass(tipo){ return tipo === "Correctivo" ? "tipo-correctivo" : "tipo-preventivo"; }
+  function badgeClass(tipo){
+    if(tipo === "Correctivo") return "correctivo";
+    if(tipo === "Evolutivo") return "evolutivo";
+    return "preventivo";
+  }
+  function chipClass(tipo){
+    if(tipo === "Correctivo") return "tipo-correctivo";
+    if(tipo === "Evolutivo") return "tipo-evolutivo";
+    return "tipo-preventivo";
+  }
+
+  // ---------- catalogos (proveedores / tipos de equipamiento) ----------
+  function populateSelect(selectEl, values, opts){
+    opts = opts || {};
+    var prevValue = selectEl.value;
+    selectEl.innerHTML = "";
+    if(opts.placeholder !== undefined){
+      var ph = document.createElement("option");
+      ph.value = opts.placeholderValue !== undefined ? opts.placeholderValue : "";
+      ph.textContent = opts.placeholder;
+      if(opts.placeholderDisabled) ph.disabled = true;
+      selectEl.appendChild(ph);
+    }
+    values.forEach(function(v){
+      var o = document.createElement("option");
+      o.value = v; o.textContent = v;
+      selectEl.appendChild(o);
+    });
+    var stillValid = values.indexOf(prevValue) !== -1 ||
+      (opts.placeholder !== undefined && prevValue === (opts.placeholderValue !== undefined ? opts.placeholderValue : ""));
+    if(stillValid) selectEl.value = prevValue;
+  }
+
+  function ensureOptionExists(selectEl, value){
+    if(!value) return;
+    var exists = Array.prototype.some.call(selectEl.options, function(o){ return o.value === value; });
+    if(!exists){
+      var o = document.createElement("option");
+      o.value = value; o.textContent = value + " (fuera de catálogo)";
+      selectEl.appendChild(o);
+    }
+  }
+
+  function refreshCatalogSelects(){
+    var providerNames = state.providers.map(function(p){ return p.nombre; });
+    var equipmentNames = state.equipmentTypes.map(function(t){ return t.nombre; });
+
+    populateSelect(els.fTipoEquipo, equipmentNames, { placeholder: "Todos", placeholderValue: "" });
+    populateSelect(els.fTipo, equipmentNames, { placeholder: "Seleccionar...", placeholderValue: "", placeholderDisabled: true });
+    populateSelect(els.fProveedor, providerNames, { placeholder: "Seleccionar...", placeholderValue: "", placeholderDisabled: true });
+    populateSelect(els.catalogProveedorHabitual, providerNames, { placeholder: "Ninguno", placeholderValue: "" });
+  }
+
+  function renderCatalogos(){
+    els.proveedoresBody.innerHTML = state.providers.map(function(p){
+      var count = state.records.filter(function(r){ return r.proveedor === p.nombre; }).length;
+      return '<tr>' +
+        '<td>' + esc(p.nombre) + (count ? ' <span class="hint">(' + count + ' uso' + (count > 1 ? 's' : '') + ')</span>' : '') + '</td>' +
+        '<td class="row-actions">' +
+          '<button type="button" class="btn-light btn-sm" data-action="edit-prov" data-id="' + p.id + '">Editar</button>' +
+          '<button type="button" class="btn-danger btn-sm" data-action="del-prov" data-id="' + p.id + '">Eliminar</button>' +
+        '</td>' +
+      '</tr>';
+    }).join("") || '<tr><td colspan="2" class="hint">Sin proveedores cargados.</td></tr>';
+
+    els.tiposEquipoBody.innerHTML = state.equipmentTypes.map(function(t){
+      var count = state.records.filter(function(r){ return r.tipoEquipo === t.nombre; }).length;
+      return '<tr>' +
+        '<td>' + esc(t.nombre) + (count ? ' <span class="hint">(' + count + ' uso' + (count > 1 ? 's' : '') + ')</span>' : '') + '</td>' +
+        '<td>' + esc(t.proveedorSugerido || "—") + '</td>' +
+        '<td class="row-actions">' +
+          '<button type="button" class="btn-light btn-sm" data-action="edit-tipo" data-id="' + t.id + '">Editar</button>' +
+          '<button type="button" class="btn-danger btn-sm" data-action="del-tipo" data-id="' + t.id + '">Eliminar</button>' +
+        '</td>' +
+      '</tr>';
+    }).join("") || '<tr><td colspan="3" class="hint">Sin tipos de equipamiento cargados.</td></tr>';
+  }
+
+  function openCatalogModal(kind, item, inlineField){
+    els.catalogForm.reset();
+    els.catalogKind.value = kind;
+    els.catalogId.value = item ? item.id : "";
+    catalogInlineTarget = inlineField || null;
+
+    var isProveedor = kind === "proveedor";
+    els.catalogModalTitle.textContent = (item ? "Editar " : "Nuevo ") + (isProveedor ? "proveedor" : "tipo de equipamiento");
+    els.catalogNombreLabel.textContent = isProveedor ? "Nombre del proveedor *" : "Nombre del tipo de equipamiento *";
+    els.catalogNombre.value = item ? item.nombre : "";
+    els.catalogProveedorHabitualWrap.style.display = isProveedor ? "none" : "block";
+    els.catalogProveedorHabitual.value = (!isProveedor && item) ? (item.proveedorSugerido || "") : "";
+    els.btnDeleteCatalogItem.style.display = item ? "inline-block" : "none";
+
+    els.catalogOverlay.classList.add("active");
+    els.catalogNombre.focus();
+  }
+  function closeCatalogModal(){
+    els.catalogOverlay.classList.remove("active");
+    catalogInlineTarget = null;
+  }
+
+  function deleteCatalogItem(kind, item){
+    var isProveedor = kind === "proveedor";
+    var count = state.records.filter(function(r){
+      return isProveedor ? r.proveedor === item.nombre : r.tipoEquipo === item.nombre;
+    }).length;
+    var msg = count
+      ? '"' + item.nombre + '" está usado en ' + count + ' mantenimiento(s). Esos registros conservarán el dato, pero dejará de estar disponible para elegir en nuevos mantenimientos. ¿Eliminar de todos modos?'
+      : '¿Eliminar "' + item.nombre + '"?';
+    if(!confirm(msg)) return;
+
+    if(isProveedor){
+      state.providers = state.providers.filter(function(p){ return p.id !== item.id; });
+      state.equipmentTypes.forEach(function(t){ if(t.proveedorSugerido === item.nombre) t.proveedorSugerido = ""; });
+      saveProviders();
+      saveEquipmentTypes();
+    } else {
+      state.equipmentTypes = state.equipmentTypes.filter(function(t){ return t.id !== item.id; });
+      saveEquipmentTypes();
+    }
+    refreshCatalogSelects();
+    renderCatalogos();
+  }
 
   var MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   var WEEKDAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
@@ -543,12 +808,17 @@
     state.view = view;
     els.viewCalendar.classList.toggle("active", view === "calendar");
     els.viewList.classList.toggle("active", view === "list");
+    els.viewCatalogos.classList.toggle("active", view === "catalogos");
     els.tabCalendar.classList.toggle("active", view === "calendar");
     els.tabList.classList.toggle("active", view === "list");
-    if(view === "calendar") renderCalendar(); else renderList();
+    els.tabCatalogos.classList.toggle("active", view === "catalogos");
+    if(view === "calendar") renderCalendar();
+    else if(view === "list") renderList();
+    else renderCatalogos();
   }
   els.tabCalendar.addEventListener("click", function(){ switchView("calendar"); });
   els.tabList.addEventListener("click", function(){ switchView("list"); });
+  els.tabCatalogos.addEventListener("click", function(){ switchView("catalogos"); });
 
   // ---------- calendar rendering ----------
   function renderCalendar(){
@@ -730,10 +1000,14 @@
     els.btnPdfSingle.style.display = record ? "inline-block" : "none";
     els.maintForm.reset();
     els.fId.value = record ? record.id : "";
+    els.fProveedor.value = "";
+    els.fTipo.value = "";
 
     if(record){
       els.fFecha.value = record.fecha || "";
+      ensureOptionExists(els.fProveedor, record.proveedor);
       els.fProveedor.value = record.proveedor || "";
+      ensureOptionExists(els.fTipo, record.tipoEquipo);
       els.fTipo.value = record.tipoEquipo || "";
       els.fDescripcion.value = record.descripcion || "";
       els.fResponsable.value = record.responsableVNA || "";
@@ -754,12 +1028,16 @@
   els.btnCloseModal.addEventListener("click", closeModal);
   els.btnCancel.addEventListener("click", closeModal);
   els.overlay.addEventListener("click", function(e){ if(e.target === els.overlay) closeModal(); });
-  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && els.overlay.classList.contains("active")) closeModal(); });
+  document.addEventListener("keydown", function(e){
+    if(e.key !== "Escape") return;
+    if(els.catalogOverlay.classList.contains("active")) closeCatalogModal();
+    else if(els.overlay.classList.contains("active")) closeModal();
+  });
 
   els.maintForm.addEventListener("submit", function(e){
     e.preventDefault();
     var tipoMantRadio = els.maintForm.querySelector('input[name="tipoMantenimiento"]:checked');
-    if(!tipoMantRadio){ alert("Seleccione el tipo de mantenimiento (Preventivo o Correctivo)."); return; }
+    if(!tipoMantRadio){ alert("Seleccione el tipo de mantenimiento (Preventivo, Correctivo o Evolutivo)."); return; }
 
     var data = {
       id: els.fId.value || uid(),
@@ -799,8 +1077,101 @@
 
   els.fTipo.addEventListener("change", function(){
     if(state.editingId) return;
-    var sugerido = TIPO_PROVEEDOR[els.fTipo.value];
-    if(sugerido) els.fProveedor.value = sugerido;
+    var tipo = state.equipmentTypes.find(function(t){ return t.nombre === els.fTipo.value; });
+    if(tipo && tipo.proveedorSugerido) els.fProveedor.value = tipo.proveedorSugerido;
+  });
+
+  els.btnAddProveedorInline.addEventListener("click", function(){ openCatalogModal("proveedor", null, "proveedor"); });
+  els.btnAddTipoInline.addEventListener("click", function(){ openCatalogModal("tipo", null, "tipo"); });
+
+  els.btnNewProveedor.addEventListener("click", function(){ openCatalogModal("proveedor", null); });
+  els.btnNewTipoEquipo.addEventListener("click", function(){ openCatalogModal("tipo", null); });
+
+  els.proveedoresBody.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    var item = state.providers.find(function(p){ return p.id === btn.dataset.id; });
+    if(!item) return;
+    if(btn.dataset.action === "edit-prov") openCatalogModal("proveedor", item);
+    else if(btn.dataset.action === "del-prov") deleteCatalogItem("proveedor", item);
+  });
+  els.tiposEquipoBody.addEventListener("click", function(e){
+    var btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    var item = state.equipmentTypes.find(function(t){ return t.id === btn.dataset.id; });
+    if(!item) return;
+    if(btn.dataset.action === "edit-tipo") openCatalogModal("tipo", item);
+    else if(btn.dataset.action === "del-tipo") deleteCatalogItem("tipo", item);
+  });
+
+  els.btnCloseCatalogModal.addEventListener("click", closeCatalogModal);
+  els.btnCancelCatalog.addEventListener("click", closeCatalogModal);
+  els.catalogOverlay.addEventListener("click", function(e){ if(e.target === els.catalogOverlay) closeCatalogModal(); });
+
+  els.btnDeleteCatalogItem.addEventListener("click", function(){
+    var kind = els.catalogKind.value;
+    var id = els.catalogId.value;
+    var item = kind === "proveedor"
+      ? state.providers.find(function(p){ return p.id === id; })
+      : state.equipmentTypes.find(function(t){ return t.id === id; });
+    if(!item) return;
+    closeCatalogModal();
+    deleteCatalogItem(kind, item);
+  });
+
+  els.catalogForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var kind = els.catalogKind.value;
+    var id = els.catalogId.value;
+    var nombre = els.catalogNombre.value.trim();
+    if(!nombre) return;
+
+    if(kind === "proveedor"){
+      var dup = state.providers.some(function(p){ return p.id !== id && p.nombre.toLowerCase() === nombre.toLowerCase(); });
+      if(dup){ alert("Ya existe un proveedor con ese nombre."); return; }
+      var existing = state.providers.find(function(p){ return p.id === id; });
+      if(existing){
+        var oldName = existing.nombre;
+        existing.nombre = nombre;
+        if(oldName !== nombre){
+          state.records.forEach(function(r){ if(r.proveedor === oldName) r.proveedor = nombre; });
+          state.equipmentTypes.forEach(function(t){ if(t.proveedorSugerido === oldName) t.proveedorSugerido = nombre; });
+          saveRecords();
+          saveEquipmentTypes();
+        }
+      } else {
+        state.providers.push({ id: uid(), nombre: nombre });
+      }
+      saveProviders();
+    } else {
+      var dupT = state.equipmentTypes.some(function(t){ return t.id !== id && t.nombre.toLowerCase() === nombre.toLowerCase(); });
+      if(dupT){ alert("Ya existe un tipo de equipamiento con ese nombre."); return; }
+      var proveedorSugerido = els.catalogProveedorHabitual.value || "";
+      var existingT = state.equipmentTypes.find(function(t){ return t.id === id; });
+      if(existingT){
+        var oldNameT = existingT.nombre;
+        existingT.nombre = nombre;
+        existingT.proveedorSugerido = proveedorSugerido;
+        if(oldNameT !== nombre){
+          state.records.forEach(function(r){ if(r.tipoEquipo === oldNameT) r.tipoEquipo = nombre; });
+          saveRecords();
+        }
+      } else {
+        state.equipmentTypes.push({ id: uid(), nombre: nombre, proveedorSugerido: proveedorSugerido });
+      }
+      saveEquipmentTypes();
+    }
+
+    refreshCatalogSelects();
+    var inlineTarget = catalogInlineTarget;
+    closeCatalogModal();
+
+    if(inlineTarget === "proveedor") els.fProveedor.value = nombre;
+    else if(inlineTarget === "tipo") els.fTipo.value = nombre;
+
+    if(state.view === "catalogos") renderCatalogos();
+    else if(state.view === "list") renderList();
+    else renderCalendar();
   });
 
   els.btnPdfSingle.addEventListener("click", function(){
