@@ -8,9 +8,10 @@
 
 ## Qué estamos construyendo
 
-**Gestión de Modernización Tecnológica – VNT**, una herramienta para gestionar
-los mantenimientos del equipamiento instalado en la Vía Navegable Troncal
-(VNT): mantenimientos **preventivos**, **correctivos** y **evolutivos**.
+**Modernización Tecnológica - Gestión de Actividades**, una herramienta para
+gestionar las actividades de mantenimiento del equipamiento instalado en la
+Vía Navegable Troncal: actividades **preventivas**, **correctivas** y
+**evolutivas**.
 
 Categorías de equipamiento que cubre: Centro de Monitoreo, Punto de
 Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
@@ -20,18 +21,24 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
 - Implementación actual: `mantenimientos_vnt.html` — archivo único,
   autocontenido, sin dependencias externas (HTML/CSS/JS embebidos, logo VNA
   en base64, datos persistidos en `localStorage` del navegador).
-- Funcionalidades ya resueltas: alta/edición/baja de mantenimientos
-  (Preventivo, Correctivo o **Evolutivo**), calendario mensual con doble
-  clic para ver/editar o crear en una fecha, listado filtrable, descarga de
-  reporte en PDF vía impresión del navegador.
-- Pestaña **Catálogos**: gestión de alta/baja/modificación de proveedores y
-  de tipos de equipamiento. Los combos "Proveedor" y "Tipo de equipamiento"
-  del formulario se alimentan de estos catálogos (ya no son texto libre ni
-  una lista fija), con un botón "+" para cargar un ítem nuevo sin salir del
-  formulario. Cada tipo de equipamiento puede tener un proveedor habitual
-  que se autocompleta al elegirlo. Renombrar actualiza en cascada los
-  mantenimientos existentes; eliminar avisa cuántos registros lo usan pero
-  no borra esos datos históricos.
+- Funcionalidades ya resueltas: alta/edición/baja de actividades
+  (Preventivo, Correctivo o Evolutivo), calendario mensual con doble clic
+  para ver/editar o crear en una fecha (muestra tipo de equipamiento,
+  proveedor y descripción de cada actividad), listado filtrable (incluye
+  columna Descripción), descarga de reporte en PDF vía impresión del
+  navegador (reporte individual y listado completo, con todos los campos).
+- Campos del formulario: tipo de actividad, fecha, proveedor, tipo de
+  equipamiento, descripción, responsable VNA, Inspector AAyC, Inspector
+  VNA, nota de pedido, orden de servicio y comentarios.
+- Pestaña **Catálogos**: alta/baja/modificación de Proveedores, Tipos de
+  equipamiento, Inspectores AAyC e Inspectores VNA. Los combos
+  correspondientes del formulario se alimentan de estos catálogos (no son
+  texto libre ni listas fijas), con un botón "+" para cargar un ítem nuevo
+  sin salir del formulario. Cada tipo de equipamiento puede tener un
+  proveedor habitual que se autocompleta al elegirlo. Renombrar un ítem
+  actualiza en cascada las actividades existentes; eliminarlo avisa cuántos
+  registros lo usan pero no borra esos datos históricos. La lógica es
+  genérica (mapa `CATALOG_DEFS` en el JS) para los 4 catálogos.
 - Trabajo en curso en la rama `claude/vnt-maintenance-form-plt36o`,
   [PR #1](https://github.com/romeodiego/Repositorio/pull/1).
 - Pendiente de definir: si se necesita una bitácora realmente compartida
