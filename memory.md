@@ -24,21 +24,24 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
 - Funcionalidades ya resueltas: alta/edición/baja de actividades
   (Preventivo, Correctivo o Evolutivo), calendario mensual con doble clic
   para ver/editar o crear en una fecha (muestra tipo de equipamiento,
-  proveedor y descripción de cada actividad), listado filtrable (incluye
-  columna Descripción), descarga de reporte en PDF vía impresión del
-  navegador (reporte individual y listado completo, con todos los campos).
-- Campos del formulario: tipo de actividad, fecha, proveedor, tipo de
-  equipamiento, descripción, responsable VNA, Inspector AAyC, Inspector
-  VNA, nota de pedido, orden de servicio y comentarios.
+  proveedor y descripción de cada actividad), pestaña **Detalle de
+  Actividades** (listado filtrable, columna Descripción justo después de
+  Equipamiento), descarga de reporte en PDF vía impresión del navegador y
+  descarga a **Excel** (.xls / SpreadsheetML, sin librerías externas) —
+  ambos respetan los filtros aplicados.
+- Campos del formulario, en este orden: tipo de actividad, fecha,
+  proveedor, tipo de equipamiento, descripción, Nota de Pedido y Orden de
+  Servicio (misma fila), Inspector AAyC e Inspector VNA (misma fila),
+  Responsable VNA, y comentarios al final.
 - Pestaña **Catálogos**: alta/baja/modificación de Proveedores, Tipos de
-  equipamiento, Inspectores AAyC e Inspectores VNA. Los combos
-  correspondientes del formulario se alimentan de estos catálogos (no son
-  texto libre ni listas fijas), con un botón "+" para cargar un ítem nuevo
-  sin salir del formulario. Cada tipo de equipamiento puede tener un
-  proveedor habitual que se autocompleta al elegirlo. Renombrar un ítem
-  actualiza en cascada las actividades existentes; eliminarlo avisa cuántos
-  registros lo usan pero no borra esos datos históricos. La lógica es
-  genérica (mapa `CATALOG_DEFS` en el JS) para los 4 catálogos.
+  equipamiento, Inspectores AAyC, Inspectores VNA y Responsables VNA. Los
+  combos correspondientes del formulario se alimentan de estos catálogos
+  (no son texto libre ni listas fijas), con un botón "+" para cargar un
+  ítem nuevo sin salir del formulario. Cada tipo de equipamiento puede
+  tener un proveedor habitual que se autocompleta al elegirlo. Renombrar un
+  ítem actualiza en cascada las actividades existentes; eliminarlo avisa
+  cuántos registros lo usan pero no borra esos datos históricos. La lógica
+  es genérica (mapa `CATALOG_DEFS` en el JS) para los 5 catálogos.
 - Trabajo en curso en la rama `claude/vnt-maintenance-form-plt36o`,
   [PR #1](https://github.com/romeodiego/Repositorio/pull/1).
 - Pendiente de definir: si se necesita una bitácora realmente compartida
