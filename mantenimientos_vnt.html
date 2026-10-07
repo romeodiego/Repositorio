@@ -177,7 +177,7 @@
   .badge.correctivo{background:var(--danger);}
   .badge.evolutivo{background:var(--primary-light);}
   .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
-  .desc-cell{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cell-desc{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--text-muted);margin-top:2px;}
   .empty-state{text-align:center;padding:40px 10px;color:var(--text-muted);}
   .empty-state svg{opacity:.5;margin-bottom:10px;}
 
@@ -221,7 +221,7 @@
   .hint{font-size:11.5px;color:var(--text-muted);margin-top:4px;}
 
   /* ---------- CATALOGOS ---------- */
-  .catalog-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;}
+  .catalog-grid{display:flex;flex-direction:column;gap:20px;}
   .catalog-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px;}
   .catalog-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
   .catalog-card-header h3{margin:0;font-size:15px;color:var(--primary);}
@@ -234,7 +234,6 @@
     .form-grid{grid-template-columns:1fr;}
     .cal-cell{min-height:100px;}
     .brand-text h1{font-size:16px;}
-    .catalog-grid{grid-template-columns:1fr;}
   }
 
   /* ---------- PRINT ---------- */
@@ -352,7 +351,6 @@
             <th>Fecha</th>
             <th>Tipo</th>
             <th>Equipamiento</th>
-            <th>Descripción</th>
             <th>Proveedor</th>
             <th>Responsable VNA</th>
             <th>Inspector AAyC</th>
@@ -1150,8 +1148,7 @@
       return '<tr data-id="' + r.id + '">' +
         '<td>' + fmtDate(r.fecha) + '</td>' +
         '<td><span class="badge ' + badgeClass(r.tipoMantenimiento) + '">' + esc(r.tipoMantenimiento) + '</span></td>' +
-        '<td>' + esc(r.tipoEquipo) + '</td>' +
-        '<td class="desc-cell" title="' + esc(r.descripcion) + '">' + esc(r.descripcion) + '</td>' +
+        '<td>' + esc(r.tipoEquipo) + '<div class="cell-desc" title="' + esc(r.descripcion) + '">' + esc(r.descripcion) + '</div></td>' +
         '<td>' + esc(r.proveedor) + '</td>' +
         '<td>' + esc(r.responsableVNA) + '</td>' +
         '<td>' + esc(r.inspector) + '</td>' +
