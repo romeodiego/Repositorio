@@ -59,22 +59,36 @@ distintos.
 Abrir `gestion_actividades_mysql.html` en el navegador, iniciar sesión con
 `admin` / `CambiarAhora123!`, y:
 
-1. Crear tu usuario real (ver "Gestión de usuarios" abajo) con rol `admin`.
+1. Crear tu usuario real desde la pestaña **Usuarios** (ver abajo) con rol
+   `admin`.
 2. Desactivar o cambiar la contraseña del usuario `admin` inicial.
 
 ## Roles de usuario
 
-- **admin**: puede gestionar actividades y los catálogos (Proveedores,
-  Tipos de equipamiento, Inspectores AAyC/VNA, Responsables VNA).
-- **editor**: puede cargar, editar y eliminar actividades, pero no ve la
-  pestaña "Catálogos" ni puede crear ítems de catálogo nuevos desde el
-  formulario (los botones "+" quedan ocultos).
+- **admin**: puede gestionar actividades, los catálogos (Proveedores,
+  Tipos de equipamiento, Inspectores AAyC/VNA, Responsables VNA) y los
+  usuarios.
+- **editor**: puede cargar, editar y eliminar actividades, pero no ve las
+  pestañas "Catálogos" ni "Usuarios", ni puede crear ítems de catálogo
+  nuevos desde el formulario (los botones "+" quedan ocultos).
 
 ## Gestión de usuarios
 
-No hay pantalla propia para administrar usuarios todavía. Un administrador
-puede crear, editar o desactivar usuarios llamando a la API directamente,
-por ejemplo con `curl` (reemplazar `tu-dominio` y ajustar según haga falta):
+Los administradores tienen una pestaña **"👤 Usuarios"** (no visible para
+el rol `editor`) para:
+
+- Crear usuarios nuevos (usuario, nombre completo, contraseña de al menos
+  8 caracteres, rol).
+- Editar nombre, rol o resetear la contraseña de un usuario existente.
+- Activar/Desactivar un usuario (un usuario desactivado no puede iniciar
+  sesión, pero sus actividades ya cargadas se conservan intactas).
+
+Por seguridad, un administrador no puede cambiarse el rol ni desactivarse
+a sí mismo desde esa pantalla (esos campos quedan deshabilitados al editar
+su propio usuario), para evitar quedar bloqueado accidentalmente.
+
+Si se prefiere hacerlo por línea de comandos, la misma API queda
+disponible directamente, por ejemplo con `curl`:
 
 ```bash
 # Crear un usuario (ejecutar logueado como admin, con la cookie de sesión)

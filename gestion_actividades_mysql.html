@@ -245,6 +245,10 @@
   .user-badge{color:#fff;font-size:12.5px;display:flex;align-items:center;gap:8px;}
   .user-badge .role-tag{background:rgba(255,255,255,0.18);padding:2px 8px;border-radius:10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;}
   body.role-editor [data-admin-only]{display:none !important;}
+  .badge.rol-admin{background:var(--primary);}
+  .badge.rol-editor{background:var(--text-muted);}
+  .badge.activo{background:var(--accent-dark);}
+  .badge.inactivo{background:var(--danger);}
 
   @media (max-width:720px){
     .form-grid{grid-template-columns:1fr;}
@@ -321,6 +325,7 @@
   <button id="tabCalendar" class="active" data-view="calendar">📅 Calendario</button>
   <button id="tabList" data-view="list">📋 Detalle de Actividades</button>
   <button id="tabCatalogos" data-view="catalogos" data-admin-only>⚙️ Catálogos</button>
+  <button id="tabUsuarios" data-view="usuarios" data-admin-only>👤 Usuarios</button>
 </nav>
 
 <main>
@@ -474,6 +479,23 @@
     </div>
     <p class="hint">Estos catálogos alimentan los combos del formulario de actividades (Proveedor, Tipo de equipamiento, Inspector AAyC, Inspector VNA y Responsable VNA). Eliminar un elemento no afecta los registros ya guardados, pero deja de estar disponible para los nuevos.</p>
   </section>
+
+  <!-- ================= USUARIOS VIEW ================= -->
+  <section class="view panel" id="viewUsuarios">
+    <div class="catalog-card">
+      <div class="catalog-card-header">
+        <h3>Usuarios</h3>
+        <button type="button" class="btn-primary btn-sm" id="btnNewUsuario">+ Nuevo usuario</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Usuario</th><th>Nombre completo</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="usuariosBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="hint">Un usuario desactivado no puede iniciar sesión, pero sus actividades cargadas se conservan. Solo los administradores ven esta pestaña.</p>
+  </section>
 </main>
 
 <footer class="app-footer">
@@ -624,6 +646,57 @@
   </div>
 </div>
 
+<!-- ================= USER MODAL ================= -->
+<div class="overlay" id="userOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3 id="userModalTitle">Nuevo usuario</h3>
+      <button type="button" class="modal-close" id="btnCloseUserModal">✕</button>
+    </div>
+    <form id="userForm">
+      <div class="modal-body">
+        <input type="hidden" id="userId">
+        <div class="form-grid">
+          <div class="full">
+            <label for="userNombreUsuario">Usuario *</label>
+            <input type="text" id="userNombreUsuario" placeholder="nombre.apellido" required autocomplete="off">
+          </div>
+          <div class="full">
+            <label for="userNombreCompleto">Nombre completo *</label>
+            <input type="text" id="userNombreCompleto" placeholder="Nombre y apellido" required>
+          </div>
+          <div>
+            <label for="userRol">Rol *</label>
+            <select id="userRol" required>
+              <option value="editor">Editor</option>
+              <option value="admin">Administrador</option>
+            </select>
+          </div>
+          <div id="userActivoWrap" style="display:none;">
+            <label for="userActivo">Estado</label>
+            <select id="userActivo">
+              <option value="1">Activo</option>
+              <option value="0">Inactivo</option>
+            </select>
+          </div>
+          <div class="full">
+            <label for="userPassword" id="userPasswordLabel">Contraseña *</label>
+            <input type="password" id="userPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
+            <p class="hint" id="userPasswordHint" style="display:none;">Dejar en blanco para no cambiar la contraseña actual.</p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="left"></div>
+        <div class="right">
+          <button type="button" class="btn-light" id="btnCancelUser">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ================= PRINT AREA (oculto, solo visible al imprimir) ================= -->
 <div id="printArea"></div>
 </div><!-- /appRoot -->
@@ -671,13 +744,18 @@
    "catalogProveedorHabitualWrap","catalogProveedorHabitual",
    "btnDeleteCatalogItem","btnCancelCatalog",
    "loginScreen","appRoot","loginForm","loginUsuario","loginPassword","loginError",
-   "btnLogout","userBadgeName","userBadgeRole","loginLogo"
+   "btnLogout","userBadgeName","userBadgeRole","loginLogo",
+   "tabUsuarios","viewUsuarios","usuariosBody","btnNewUsuario",
+   "userOverlay","userModalTitle","btnCloseUserModal","userForm","userId",
+   "userNombreUsuario","userNombreCompleto","userRol","userActivoWrap","userActivo",
+   "userPassword","userPasswordLabel","userPasswordHint","btnCancelUser"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 
   var state = {
     records: [],
     providers: [],
     equipmentTypes: [],
+    usuarios: [],
     inspectoresAAyC: [],
     inspectoresVNA: [],
     responsablesVNA: [],
@@ -863,26 +941,155 @@
     renderCatalogos();
   }
 
+  // ---------- usuarios (solo admin) ----------
+  function roleBadgeClass(rol){ return rol === "admin" ? "rol-admin" : "rol-editor"; }
+
+  function renderUsuarios(){
+    els.usuariosBody.innerHTML = state.usuarios.map(function(u){
+      var isSelf = currentUser && u.id === currentUser.id;
+      var estadoBadge = u.activo
+        ? '<span class="badge activo">Activo</span>'
+        : '<span class="badge inactivo">Inactivo</span>';
+      var toggleBtn = isSelf
+        ? ''
+        : '<button type="button" class="btn-light btn-sm" data-action="toggle" data-id="' + u.id + '">' + (u.activo ? "Desactivar" : "Activar") + '</button>';
+      return '<tr>' +
+        '<td>' + esc(u.nombreUsuario) + (isSelf ? ' <span class="hint">(vos)</span>' : '') + '</td>' +
+        '<td>' + esc(u.nombreCompleto) + '</td>' +
+        '<td><span class="badge ' + roleBadgeClass(u.rol) + '">' + (u.rol === "admin" ? "Administrador" : "Editor") + '</span></td>' +
+        '<td>' + estadoBadge + '</td>' +
+        '<td class="row-actions">' +
+          '<button type="button" class="btn-light btn-sm" data-action="edit" data-id="' + u.id + '">Editar</button>' +
+          toggleBtn +
+        '</td>' +
+      '</tr>';
+    }).join("") || '<tr><td colspan="5" class="hint">Sin usuarios cargados.</td></tr>';
+  }
+
+  async function loadAndRenderUsuarios(){
+    try{
+      state.usuarios = await apiFetch("usuarios.php");
+    }catch(err){
+      alert(err.message);
+      return;
+    }
+    renderUsuarios();
+  }
+
+  els.usuariosBody.addEventListener("click", async function(e){
+    var btn = e.target.closest("button[data-action]");
+    if(!btn) return;
+    var user = state.usuarios.find(function(u){ return String(u.id) === btn.dataset.id; });
+    if(!user) return;
+    if(btn.dataset.action === "edit"){
+      openUserModal(user);
+    } else if(btn.dataset.action === "toggle"){
+      var verbo = user.activo ? "desactivar" : "activar";
+      if(!confirm('¿Seguro que querés ' + verbo + ' a "' + user.nombreCompleto + '"?')) return;
+      try{
+        await apiFetch("usuarios.php?id=" + user.id, { method: "PUT", body: JSON.stringify({ activo: !user.activo }) });
+      }catch(err){
+        alert(err.message);
+        return;
+      }
+      await loadAndRenderUsuarios();
+    }
+  });
+
+  els.btnNewUsuario.addEventListener("click", function(){ openUserModal(null); });
+
+  function openUserModal(user){
+    els.userForm.reset();
+    els.userId.value = user ? user.id : "";
+    els.userModalTitle.textContent = user ? "Editar usuario" : "Nuevo usuario";
+    els.userNombreUsuario.value = user ? user.nombreUsuario : "";
+    els.userNombreUsuario.disabled = !!user;
+    els.userNombreCompleto.value = user ? user.nombreCompleto : "";
+    var isSelf = !!(user && currentUser && user.id === currentUser.id);
+    els.userRol.value = user ? user.rol : "editor";
+    els.userRol.disabled = isSelf;
+    els.userActivoWrap.style.display = user ? "block" : "none";
+    els.userActivo.value = user ? (user.activo ? "1" : "0") : "1";
+    els.userActivo.disabled = isSelf;
+    els.userPasswordLabel.textContent = user ? "Nueva contraseña" : "Contraseña *";
+    els.userPassword.required = !user;
+    els.userPasswordHint.style.display = user ? "block" : "none";
+    els.userOverlay.classList.add("active");
+    els.userNombreUsuario.focus();
+  }
+  function closeUserModal(){
+    els.userOverlay.classList.remove("active");
+  }
+  els.btnCloseUserModal.addEventListener("click", closeUserModal);
+  els.btnCancelUser.addEventListener("click", closeUserModal);
+  els.userOverlay.addEventListener("click", function(e){ if(e.target === els.userOverlay) closeUserModal(); });
+
+  els.userForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    var id = els.userId.value;
+    var password = els.userPassword.value;
+    if(password && password.length > 0 && password.length < 8){
+      alert("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    if(!id && password.length < 8){
+      alert("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+
+    try{
+      if(id){
+        var body = {
+          nombreCompleto: els.userNombreCompleto.value.trim(),
+          rol: els.userRol.value,
+          activo: els.userActivo.value === "1"
+        };
+        if(password) body.password = password;
+        await apiFetch("usuarios.php?id=" + id, { method: "PUT", body: JSON.stringify(body) });
+      } else {
+        await apiFetch("usuarios.php", {
+          method: "POST",
+          body: JSON.stringify({
+            nombreUsuario: els.userNombreUsuario.value.trim(),
+            nombreCompleto: els.userNombreCompleto.value.trim(),
+            rol: els.userRol.value,
+            password: password
+          })
+        });
+      }
+    }catch(err){
+      alert(err.message);
+      return;
+    }
+
+    closeUserModal();
+    await loadAndRenderUsuarios();
+  });
+
   var MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
   var WEEKDAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 
   // ---------- view switching ----------
   function switchView(view){
-    if(view === "catalogos" && currentUser && currentUser.rol !== "admin") view = "calendar";
+    if((view === "catalogos" || view === "usuarios") && currentUser && currentUser.rol !== "admin") view = "calendar";
     state.view = view;
     els.viewCalendar.classList.toggle("active", view === "calendar");
     els.viewList.classList.toggle("active", view === "list");
     els.viewCatalogos.classList.toggle("active", view === "catalogos");
+    els.viewUsuarios.classList.toggle("active", view === "usuarios");
     els.tabCalendar.classList.toggle("active", view === "calendar");
     els.tabList.classList.toggle("active", view === "list");
     els.tabCatalogos.classList.toggle("active", view === "catalogos");
+    els.tabUsuarios.classList.toggle("active", view === "usuarios");
     if(view === "calendar") renderCalendar();
     else if(view === "list") renderList();
-    else renderCatalogos();
+    else if(view === "catalogos") renderCatalogos();
+    else loadAndRenderUsuarios();
   }
   els.tabCalendar.addEventListener("click", function(){ switchView("calendar"); });
   els.tabList.addEventListener("click", function(){ switchView("list"); });
   els.tabCatalogos.addEventListener("click", function(){ switchView("catalogos"); });
+  els.tabUsuarios.addEventListener("click", function(){ switchView("usuarios"); });
 
   // ---------- calendar rendering ----------
   function renderCalendar(){
@@ -1103,7 +1310,8 @@
   els.overlay.addEventListener("click", function(e){ if(e.target === els.overlay) closeModal(); });
   document.addEventListener("keydown", function(e){
     if(e.key !== "Escape") return;
-    if(els.catalogOverlay.classList.contains("active")) closeCatalogModal();
+    if(els.userOverlay.classList.contains("active")) closeUserModal();
+    else if(els.catalogOverlay.classList.contains("active")) closeCatalogModal();
     else if(els.overlay.classList.contains("active")) closeModal();
   });
 
