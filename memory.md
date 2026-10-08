@@ -42,11 +42,27 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   ítem actualiza en cascada las actividades existentes; eliminarlo avisa
   cuántos registros lo usan pero no borra esos datos históricos. La lógica
   es genérica (mapa `CATALOG_DEFS` en el JS) para los 5 catálogos.
+- En el listado principal, la columna "Nota de Pedido" se reemplazó por
+  "Inspector VNA" (la Nota de Pedido sigue existiendo como dato, visible en
+  el formulario y en las descargas).
+- **Nueva variante con base de datos real**: `gestion_actividades_mysql.html`
+  + `backend/` (API en PHP puro) + `db/schema.sql` (esquema MySQL
+  relacional). Resuelve "¿cómo comparto esto entre varios usuarios?": login
+  con usuarios y roles (`admin` ve y gestiona Catálogos; `editor` solo
+  actividades), datos compartidos en una base real en vez de
+  `localStorage`. Incluye `id_actividad` como clave primaria oculta en el
+  formulario pero presente en las descargas de Excel/PDF. Documentado en
+  `MYSQL_README.md` (cómo importar el esquema, configurar
+  `backend/config.php`, usuario admin inicial `admin` / `CambiarAhora123!`
+  a cambiar cuanto antes). Probada de punta a punta con PHP+MariaDB real
+  antes de subir el código. La versión offline (`mantenimientos_vnt.html`)
+  sigue intacta y no depende de nada de esto.
+- Pendiente: desplegar esta variante en un hosting real (la sesión de
+  trabajo es un contenedor temporal sin MySQL persistente); decidir si el
+  stack final es PHP (como está armado) u otra cosa si el hosting elegido
+  no lo soporta.
 - Trabajo en curso en la rama `claude/vnt-maintenance-form-plt36o`,
   [PR #1](https://github.com/romeodiego/Repositorio/pull/1).
-- Pendiente de definir: si se necesita una bitácora realmente compartida
-  entre varios usuarios (hoy los datos quedan en el navegador de cada uno,
-  no en un backend común).
 
 ## Preferencias de diseño
 
