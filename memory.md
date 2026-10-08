@@ -57,6 +57,10 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   a cambiar cuanto antes). Probada de punta a punta con PHP+MariaDB real
   antes de subir el código. La versión offline (`mantenimientos_vnt.html`)
   sigue intacta y no depende de nada de esto.
+- Dentro de esa variante, pestaña **"👤 Usuarios"** (solo admin): alta,
+  edición (nombre/rol/reseteo de contraseña) y activar/desactivar usuarios
+  desde la propia app, sin necesidad de usar curl contra la API. Un admin
+  no puede cambiarse el rol ni desactivarse a sí mismo desde ahí.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido
