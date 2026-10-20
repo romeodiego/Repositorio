@@ -51,4 +51,29 @@ if ($action === 'logout' && $method === 'POST') {
     json_response(['ok' => true]);
 }
 
+if ($action === 'change_password' && $method === 'POST') {
+    $user = require_login();
+    $body = read_json_body();
+    $actual = (string)($body['passwordActual'] ?? '');
+    $nueva = (string)($body['passwordNueva'] ?? '');
+
+    if ($actual === '' || $nueva === '') {
+        json_error('Debe indicar la contraseña actual y la nueva.', 400);
+    }
+    if (strlen($nueva) < 8) {
+        json_error('La nueva contraseña debe tener al menos 8 caracteres.', 400);
+    }
+
+    $stmt = db()->prepare('SELECT password_hash FROM usuarios WHERE id = ? LIMIT 1');
+    $stmt->execute([$user['id']]);
+    $row = $stmt->fetch();
+    if (!$row || !password_verify($actual, $row['password_hash'])) {
+        json_error('La contraseña actual no es correcta.', 401);
+    }
+
+    $stmt = db()->prepare('UPDATE usuarios SET password_hash = ? WHERE id = ?');
+    $stmt->execute([password_hash($nueva, PASSWORD_BCRYPT), $user['id']]);
+    json_response(['ok' => true]);
+}
+
 json_error('Acción no encontrada.', 404);

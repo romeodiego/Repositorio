@@ -26,7 +26,7 @@ if ($method === 'POST') {
     if (strlen($password) < 8) {
         json_error('La contraseña debe tener al menos 8 caracteres.', 400);
     }
-    if (!in_array($rol, ['admin', 'editor'], true)) {
+    if (!in_array($rol, ['admin', 'editor', 'observador'], true)) {
         json_error('Rol inválido.', 400);
     }
 
@@ -60,7 +60,7 @@ if ($method === 'PUT') {
         $sets[] = 'nombre_completo = ?';
         $params[] = trim($body['nombreCompleto']);
     }
-    if (isset($body['rol']) && in_array($body['rol'], ['admin', 'editor'], true)) {
+    if (isset($body['rol']) && in_array($body['rol'], ['admin', 'editor', 'observador'], true)) {
         $sets[] = 'rol = ?';
         $params[] = $body['rol'];
     }

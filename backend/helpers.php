@@ -73,3 +73,11 @@ function require_admin(): array {
     }
     return $user;
 }
+
+function require_writer(): array {
+    $user = require_login();
+    if (!in_array($user['rol'], ['admin', 'editor'], true)) {
+        json_error('No autorizado. El rol Observador solo puede consultar información.', 403);
+    }
+    return $user;
+}

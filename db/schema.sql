@@ -29,7 +29,7 @@ CREATE TABLE usuarios (
   nombre_usuario   VARCHAR(100)  NOT NULL UNIQUE,
   password_hash    VARCHAR(255)  NOT NULL,
   nombre_completo  VARCHAR(150)  NOT NULL,
-  rol              ENUM('admin', 'editor') NOT NULL DEFAULT 'editor',
+  rol              ENUM('admin', 'editor', 'observador') NOT NULL DEFAULT 'editor',
   activo           TINYINT(1)    NOT NULL DEFAULT 1,
   creado_en        DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
@@ -80,11 +80,18 @@ CREATE TABLE responsables_vna (
 -- formulario de alta/edición, pero la API la incluye siempre en las
 -- respuestas y por lo tanto queda disponible en las descargas de
 -- Excel y PDF generadas por la aplicación.
+--
+-- El "Estado" (Planificado / En Proceso / Finalizado / Cancelado) NO se
+-- guarda como columna: la API lo calcula en cada lectura a partir de
+-- fecha_inicio, fecha_fin y cancelado, para que no haga falta ningún
+-- proceso en segundo plano que lo actualice a medianoche.
 -- ----------------------------------------------------------------------------
 CREATE TABLE actividades (
   id_actividad          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   tipo_mantenimiento    ENUM('Preventivo', 'Correctivo', 'Evolutivo') NOT NULL,
-  fecha                 DATE NOT NULL,
+  fecha_inicio          DATE NOT NULL,
+  fecha_fin             DATE NULL,
+  cancelado             TINYINT(1) NOT NULL DEFAULT 0,
   proveedor_id          INT UNSIGNED NOT NULL,
   tipo_equipamiento_id  INT UNSIGNED NOT NULL,
   descripcion           TEXT NOT NULL,
@@ -118,7 +125,7 @@ CREATE TABLE actividades (
     FOREIGN KEY (creado_por) REFERENCES usuarios(id)
     ON DELETE SET NULL ON UPDATE CASCADE,
 
-  INDEX idx_act_fecha (fecha),
+  INDEX idx_act_fecha (fecha_inicio),
   INDEX idx_act_tipo_mant (tipo_mantenimiento),
   INDEX idx_act_tipo_equipo (tipo_equipamiento_id)
 ) ENGINE=InnoDB;

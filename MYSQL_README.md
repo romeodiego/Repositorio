@@ -71,6 +71,16 @@ Abrir `gestion_actividades_mysql.html` en el navegador, iniciar sesión con
 - **editor**: puede cargar, editar y eliminar actividades, pero no ve las
   pestañas "Catálogos" ni "Usuarios", ni puede crear ítems de catálogo
   nuevos desde el formulario (los botones "+" quedan ocultos).
+- **observador**: solo puede recorrer el calendario y el listado de
+  actividades, filtrar, y descargar los reportes en Excel/PDF. No ve
+  "Catálogos" ni "Usuarios", no tiene el botón "+ Nueva Actividad", y al
+  abrir una actividad la ve en modo solo lectura (sin poder guardar ni
+  eliminar). El backend rechaza cualquier intento de alta/edición/baja
+  aunque se lo intente saltear llamando a la API directamente.
+
+Todos los roles, incluido Observador, pueden cambiar su propia contraseña
+desde el botón **"🔑 Mi contraseña"** en el encabezado (pide la contraseña
+actual + la nueva, con confirmación).
 
 ## Gestión de usuarios
 
@@ -96,6 +106,31 @@ curl -b cookies.txt -X POST https://tu-dominio/backend/usuarios.php \
   -H "Content-Type: application/json" \
   -d '{"nombreUsuario":"jperez","nombreCompleto":"Juan Pérez","password":"UnaClaveSegura123","rol":"editor"}'
 ```
+
+## Fechas y Estado de una actividad
+
+El campo "Fecha de realización" de la versión offline se divide acá en dos:
+
+- **Fecha de Inicio** (obligatoria): cuándo arranca o está prevista la
+  actividad.
+- **Fecha de Finalización** (opcional): se completa cuando la actividad ya
+  se hizo. Completarla es la forma de "confirmar" que terminó.
+
+El **Estado** se calcula solo, no se elige a mano (salvo "Cancelado"), y se
+ve como una columna/badge en el listado y como filtro:
+
+| Estado | Cuándo se asigna |
+|---|---|
+| Planificado | Fecha de Inicio es futura y no está cancelada ni finalizada |
+| En Proceso | Llegó la Fecha de Inicio (es hoy o ya pasó) y no tiene Fecha de Finalización |
+| Finalizado | Se cargó una Fecha de Finalización |
+| Cancelado | Se tildó manualmente "Cancelar esta actividad" en el formulario |
+
+El pasaje de Planificado a En Proceso ocurre solo porque el Estado se
+recalcula en cada lectura contra la fecha de hoy — no hace falta ningún
+proceso en segundo plano. "Cancelado" tiene prioridad sobre los demás: si
+se cancela una actividad ya finalizada, el registro completo se conserva,
+solo cambia la etiqueta.
 
 ## Diferencias respecto a la versión offline
 

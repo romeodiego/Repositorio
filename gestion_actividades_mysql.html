@@ -150,6 +150,7 @@
   .cal-chip.tipo-preventivo{background:var(--accent-dark);}
   .cal-chip.tipo-correctivo{background:var(--danger);}
   .cal-chip.tipo-evolutivo{background:var(--primary-light);}
+  .cal-chip.cal-chip-cancelado{opacity:.55;text-decoration:line-through;}
   .cal-more{font-size:11px;color:var(--primary-light);cursor:pointer;font-weight:600;padding-left:2px;}
 
   /* ---------- LIST VIEW ---------- */
@@ -244,11 +245,21 @@
   .login-card button[type=submit]{width:100%;margin-top:6px;}
   .user-badge{color:#fff;font-size:12.5px;display:flex;align-items:center;gap:8px;}
   .user-badge .role-tag{background:rgba(255,255,255,0.18);padding:2px 8px;border-radius:10px;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px;}
-  body.role-editor [data-admin-only]{display:none !important;}
+  body.non-admin [data-admin-only]{display:none !important;}
+  body.role-observador [data-writer-only]{display:none !important;}
   .badge.rol-admin{background:var(--primary);}
   .badge.rol-editor{background:var(--text-muted);}
+  .badge.rol-observador{background:#7a5c00;}
   .badge.activo{background:var(--accent-dark);}
   .badge.inactivo{background:var(--danger);}
+  .badge.estado-planificado{background:var(--primary-light);}
+  .badge.estado-en-proceso{background:var(--warning);}
+  .badge.estado-finalizado{background:var(--accent-dark);}
+  .badge.estado-cancelado{background:var(--text-muted);}
+  .modal-header h3 .badge{font-size:10.5px;vertical-align:middle;margin-left:8px;}
+  .checkbox-field{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--text);
+    text-transform:none;letter-spacing:0;cursor:pointer;padding:9px 0 0;}
+  .checkbox-field input{width:auto;}
 
   @media (max-width:720px){
     .form-grid{grid-template-columns:1fr;}
@@ -316,8 +327,9 @@
       <span id="userBadgeName"></span>
       <span class="role-tag" id="userBadgeRole"></span>
     </div>
+    <button class="btn-outline" id="btnMiPassword">🔑 Mi contraseña</button>
     <button class="btn-outline" id="btnLogout">Cerrar sesión</button>
-    <button class="btn-primary" id="btnNew">+ Nueva Actividad</button>
+    <button class="btn-primary" id="btnNew" data-writer-only>+ Nueva Actividad</button>
   </div>
 </header>
 
@@ -365,6 +377,16 @@
         </select>
       </div>
       <div class="field">
+        <label for="fEstado">Estado</label>
+        <select id="fEstado">
+          <option value="">Todos</option>
+          <option value="Planificado">Planificado</option>
+          <option value="En Proceso">En Proceso</option>
+          <option value="Finalizado">Finalizado</option>
+          <option value="Cancelado">Cancelado</option>
+        </select>
+      </div>
+      <div class="field">
         <label for="fTipoEquipo">Tipo de equipamiento</label>
         <select id="fTipoEquipo">
           <option value="">Todos</option>
@@ -397,6 +419,7 @@
           <tr>
             <th>Fecha</th>
             <th>Tipo</th>
+            <th>Estado</th>
             <th>Equipamiento</th>
             <th>Proveedor</th>
             <th>Responsable VNA</th>
@@ -523,9 +546,15 @@
           </div>
 
           <div>
-            <label for="fFecha">Fecha de realización *</label>
-            <input type="date" id="fFecha" required>
+            <label for="fFechaInicio">Fecha de Inicio *</label>
+            <input type="date" id="fFechaInicio" required>
           </div>
+          <div>
+            <label for="fFechaFin">Fecha de Finalización</label>
+            <input type="date" id="fFechaFin">
+            <p class="hint">Completarla confirma la actividad como Finalizada.</p>
+          </div>
+
           <div>
             <label for="fProveedor">Proveedor *</label>
             <div class="select-with-add">
@@ -535,8 +564,7 @@
               <button type="button" class="btn-add-inline" id="btnAddProveedorInline" title="Agregar nuevo proveedor" data-admin-only>+</button>
             </div>
           </div>
-
-          <div class="full">
+          <div>
             <label for="fTipo">Tipo de equipamiento *</label>
             <div class="select-with-add">
               <select id="fTipo" required>
@@ -588,7 +616,14 @@
               <button type="button" class="btn-add-inline" id="btnAddResponsableVNAInline" title="Agregar nuevo responsable VNA" data-admin-only>+</button>
             </div>
           </div>
-          <div></div>
+          <div>
+            <label for="fCancelado">Estado</label>
+            <label class="checkbox-field" for="fCancelado">
+              <input type="checkbox" id="fCancelado">
+              Cancelar esta actividad
+            </label>
+            <p class="hint">La actividad se conserva; solo cambia su estado a Cancelado.</p>
+          </div>
 
           <div class="full">
             <label for="fComentarios">Comentarios</label>
@@ -603,7 +638,7 @@
         <div class="right">
           <button type="button" class="btn-light" id="btnPdfSingle" style="display:none;">⬇ Descargar PDF</button>
           <button type="button" class="btn-light" id="btnCancel">Cancelar</button>
-          <button type="submit" class="btn-primary">Guardar</button>
+          <button type="submit" class="btn-primary" id="btnGuardarActividad">Guardar</button>
         </div>
       </div>
     </form>
@@ -670,6 +705,7 @@
             <select id="userRol" required>
               <option value="editor">Editor</option>
               <option value="admin">Administrador</option>
+              <option value="observador">Observador</option>
             </select>
           </div>
           <div id="userActivoWrap" style="display:none;">
@@ -684,12 +720,51 @@
             <input type="password" id="userPassword" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
             <p class="hint" id="userPasswordHint" style="display:none;">Dejar en blanco para no cambiar la contraseña actual.</p>
           </div>
+          <div class="full">
+            <label for="userPasswordConfirm">Confirmar contraseña</label>
+            <input type="password" id="userPasswordConfirm" placeholder="Repetir contraseña" autocomplete="new-password">
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <div class="left"></div>
         <div class="right">
           <button type="button" class="btn-light" id="btnCancelUser">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MI CONTRASEÑA MODAL ================= -->
+<div class="overlay" id="passwordOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Cambiar mi contraseña</h3>
+      <button type="button" class="modal-close" id="btnClosePasswordModal">✕</button>
+    </div>
+    <form id="passwordForm">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="full">
+            <label for="miPasswordActual">Contraseña actual *</label>
+            <input type="password" id="miPasswordActual" required autocomplete="current-password">
+          </div>
+          <div class="full">
+            <label for="miPasswordNueva">Nueva contraseña *</label>
+            <input type="password" id="miPasswordNueva" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+          </div>
+          <div class="full">
+            <label for="miPasswordConfirm">Confirmar nueva contraseña *</label>
+            <input type="password" id="miPasswordConfirm" required autocomplete="new-password">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="left"></div>
+        <div class="right">
+          <button type="button" class="btn-light" id="btnCancelPassword">Cancelar</button>
           <button type="submit" class="btn-primary">Guardar</button>
         </div>
       </div>
@@ -730,11 +805,11 @@
   var els = {};
   ["btnNew","tabCalendar","tabList","tabCatalogos","viewCalendar","viewList","viewCatalogos",
    "btnPrevMonth","btnNextMonth","btnToday","calTitle","calGrid",
-   "fSearch","fTipoMant","fTipoEquipo","fDesde","fHasta","btnClearFilters",
+   "fSearch","fTipoMant","fEstado","fTipoEquipo","fDesde","fHasta","btnClearFilters",
    "listCount","btnPdfList","tableBody","emptyState",
-   "overlay","modalTitle","btnCloseModal","maintForm","fId","fFecha","fProveedor",
+   "overlay","modalTitle","btnCloseModal","maintForm","fId","fFechaInicio","fFechaFin","fCancelado","fProveedor",
    "fTipo","fDescripcion","fResponsable","fInspector","fInspectorVNA","fNota","fOrdenServicio","fComentarios",
-   "btnDelete","btnPdfSingle","btnCancel","printArea",
+   "btnDelete","btnPdfSingle","btnCancel","btnGuardarActividad","printArea",
    "btnAddProveedorInline","btnAddTipoInline","btnAddInspectorAAyCInline","btnAddInspectorVNAInline",
    "proveedoresBody","tiposEquipoBody","inspectoresAAyCBody","inspectoresVNABody","responsablesVNABody",
    "btnNewProveedor","btnNewTipoEquipo","btnNewInspectorAAyC","btnNewInspectorVNA","btnNewResponsableVNA",
@@ -748,7 +823,9 @@
    "tabUsuarios","viewUsuarios","usuariosBody","btnNewUsuario",
    "userOverlay","userModalTitle","btnCloseUserModal","userForm","userId",
    "userNombreUsuario","userNombreCompleto","userRol","userActivoWrap","userActivo",
-   "userPassword","userPasswordLabel","userPasswordHint","btnCancelUser"
+   "userPassword","userPasswordLabel","userPasswordHint","userPasswordConfirm","btnCancelUser",
+   "btnMiPassword","passwordOverlay","passwordForm","miPasswordActual","miPasswordNueva",
+   "miPasswordConfirm","btnClosePasswordModal","btnCancelPassword"
   ].forEach(function(id){ els[id] = document.getElementById(id); });
 
   var state = {
@@ -786,6 +863,12 @@
     if(tipo === "Correctivo") return "tipo-correctivo";
     if(tipo === "Evolutivo") return "tipo-evolutivo";
     return "tipo-preventivo";
+  }
+  function estadoBadgeClass(estado){
+    if(estado === "En Proceso") return "estado-en-proceso";
+    if(estado === "Finalizado") return "estado-finalizado";
+    if(estado === "Cancelado") return "estado-cancelado";
+    return "estado-planificado";
   }
 
   // ---------- catalogos (proveedores / tipos de equipamiento / inspectores / responsables) ----------
@@ -942,7 +1025,7 @@
   }
 
   // ---------- usuarios (solo admin) ----------
-  function roleBadgeClass(rol){ return rol === "admin" ? "rol-admin" : "rol-editor"; }
+  function roleBadgeClass(rol){ return "rol-" + rol; }
 
   function renderUsuarios(){
     els.usuariosBody.innerHTML = state.usuarios.map(function(u){
@@ -956,7 +1039,7 @@
       return '<tr>' +
         '<td>' + esc(u.nombreUsuario) + (isSelf ? ' <span class="hint">(vos)</span>' : '') + '</td>' +
         '<td>' + esc(u.nombreCompleto) + '</td>' +
-        '<td><span class="badge ' + roleBadgeClass(u.rol) + '">' + (u.rol === "admin" ? "Administrador" : "Editor") + '</span></td>' +
+        '<td><span class="badge ' + roleBadgeClass(u.rol) + '">' + (ROLE_LABELS[u.rol] || u.rol) + '</span></td>' +
         '<td>' + estadoBadge + '</td>' +
         '<td class="row-actions">' +
           '<button type="button" class="btn-light btn-sm" data-action="edit" data-id="' + u.id + '">Editar</button>' +
@@ -1028,12 +1111,17 @@
     e.preventDefault();
     var id = els.userId.value;
     var password = els.userPassword.value;
+    var passwordConfirm = els.userPasswordConfirm.value;
+    if(!id && password.length < 8){
+      alert("La contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
     if(password && password.length > 0 && password.length < 8){
       alert("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
-    if(!id && password.length < 8){
-      alert("La contraseña debe tener al menos 8 caracteres.");
+    if(password !== passwordConfirm){
+      alert("La confirmación de contraseña no coincide.");
       return;
     }
 
@@ -1098,7 +1186,7 @@
 
     var recordsByDate = {};
     state.records.forEach(function(r){
-      (recordsByDate[r.fecha] = recordsByDate[r.fecha] || []).push(r);
+      (recordsByDate[r.fechaInicio] = recordsByDate[r.fechaInicio] || []).push(r);
     });
 
     var firstOfMonth = new Date(y, m, 1);
@@ -1135,8 +1223,9 @@
       html += '<div class="cal-events">';
       var visible = dayRecords.slice(0,2);
       visible.forEach(function(r){
-        var tooltip = r.tipoEquipo + " — " + r.proveedor + (r.descripcion ? ("\n" + r.descripcion) : "");
-        html += '<div class="cal-chip ' + chipClass(r.tipoMantenimiento) + '" data-id="' + r.id + '" title="' + esc(tooltip) + '">' +
+        var tooltip = r.tipoEquipo + " — " + r.proveedor + " (" + r.estado + ")" + (r.descripcion ? ("\n" + r.descripcion) : "");
+        var canceladoClass = r.estado === "Cancelado" ? " cal-chip-cancelado" : "";
+        html += '<div class="cal-chip ' + chipClass(r.tipoMantenimiento) + canceladoClass + '" data-id="' + r.id + '" title="' + esc(tooltip) + '">' +
           '<div class="cal-chip-title">' + esc(r.tipoEquipo) + ' · ' + esc(r.proveedor) + '</div>' +
           (r.descripcion ? ('<div class="cal-chip-desc">' + esc(r.descripcion) + '</div>') : '') +
         '</div>';
@@ -1197,22 +1286,24 @@
   function getFilteredRecords(){
     var q = els.fSearch.value.trim().toLowerCase();
     var tipoMant = els.fTipoMant.value;
+    var estado = els.fEstado.value;
     var tipoEq = els.fTipoEquipo.value;
     var desde = els.fDesde.value;
     var hasta = els.fHasta.value;
 
     return state.records.filter(function(r){
       if(tipoMant && r.tipoMantenimiento !== tipoMant) return false;
+      if(estado && r.estado !== estado) return false;
       if(tipoEq && r.tipoEquipo !== tipoEq) return false;
-      if(desde && r.fecha < desde) return false;
-      if(hasta && r.fecha > hasta) return false;
+      if(desde && r.fechaInicio < desde) return false;
+      if(hasta && r.fechaInicio > hasta) return false;
       if(q){
         var haystack = [r.proveedor,r.inspector,r.inspectorVNA,r.responsableVNA,r.descripcion,r.comentarios,r.notaPedido,r.ordenServicio,r.tipoEquipo]
           .join(" ").toLowerCase();
         if(haystack.indexOf(q) === -1) return false;
       }
       return true;
-    }).sort(function(a,b){ return a.fecha < b.fecha ? 1 : (a.fecha > b.fecha ? -1 : 0); });
+    }).sort(function(a,b){ return a.fechaInicio < b.fechaInicio ? 1 : (a.fechaInicio > b.fechaInicio ? -1 : 0); });
   }
 
   function renderList(){
@@ -1220,20 +1311,24 @@
     els.listCount.textContent = filtered.length + " actividad(es) encontrada(s) de " + state.records.length + " en total.";
     els.emptyState.style.display = filtered.length ? "none" : "block";
 
+    var isObservador = currentUser && currentUser.rol === "observador";
     els.tableBody.innerHTML = filtered.map(function(r){
+      var acciones = '<button type="button" class="btn-light btn-sm" data-action="edit" data-id="' + r.id + '">' +
+          (isObservador ? "Ver" : "Ver / Editar") + '</button>' +
+        '<button type="button" class="btn-light btn-sm" data-action="pdf" data-id="' + r.id + '">PDF</button>';
+      if(!isObservador){
+        acciones += '<button type="button" class="btn-danger btn-sm" data-action="del" data-id="' + r.id + '">Eliminar</button>';
+      }
       return '<tr data-id="' + r.id + '">' +
-        '<td>' + fmtDate(r.fecha) + '</td>' +
+        '<td>' + fmtDate(r.fechaInicio) + '</td>' +
         '<td><span class="badge ' + badgeClass(r.tipoMantenimiento) + '">' + esc(r.tipoMantenimiento) + '</span></td>' +
+        '<td><span class="badge ' + estadoBadgeClass(r.estado) + '">' + esc(r.estado) + '</span></td>' +
         '<td>' + esc(r.tipoEquipo) + '<div class="cell-desc" title="' + esc(r.descripcion) + '">' + esc(r.descripcion) + '</div></td>' +
         '<td>' + esc(r.proveedor) + '</td>' +
         '<td>' + esc(r.responsableVNA) + '</td>' +
         '<td>' + esc(r.inspector) + '</td>' +
         '<td>' + esc(r.inspectorVNA) + '</td>' +
-        '<td class="row-actions">' +
-          '<button type="button" class="btn-light btn-sm" data-action="edit" data-id="' + r.id + '">Ver / Editar</button>' +
-          '<button type="button" class="btn-light btn-sm" data-action="pdf" data-id="' + r.id + '">PDF</button>' +
-          '<button type="button" class="btn-danger btn-sm" data-action="del" data-id="' + r.id + '">Eliminar</button>' +
-        '</td>' +
+        '<td class="row-actions">' + acciones + '</td>' +
       '</tr>';
     }).join("");
   }
@@ -1254,32 +1349,44 @@
     else if(btn.dataset.action === "del") deleteRecord(rec.id);
   });
 
-  [els.fSearch,els.fTipoMant,els.fTipoEquipo,els.fDesde,els.fHasta].forEach(function(el){
+  [els.fSearch,els.fTipoMant,els.fEstado,els.fTipoEquipo,els.fDesde,els.fHasta].forEach(function(el){
     el.addEventListener("input", renderList);
     el.addEventListener("change", renderList);
   });
   els.btnClearFilters.addEventListener("click", function(){
-    els.fSearch.value = ""; els.fTipoMant.value = ""; els.fTipoEquipo.value = "";
+    els.fSearch.value = ""; els.fTipoMant.value = ""; els.fEstado.value = ""; els.fTipoEquipo.value = "";
     els.fDesde.value = ""; els.fHasta.value = "";
     renderList();
   });
 
   // ---------- modal ----------
+  function setFormReadOnly(readOnly){
+    var controls = els.maintForm.querySelectorAll("input, select, textarea, button.btn-add-inline");
+    controls.forEach(function(c){ c.disabled = readOnly; });
+    els.btnGuardarActividad.style.display = readOnly ? "none" : "inline-block";
+  }
+
   function openModal(record, prefillDate){
+    var isObservador = currentUser && currentUser.rol === "observador";
     state.editingId = record ? record.id : null;
-    els.modalTitle.textContent = record ? "Detalle / edición de actividad" : "Nueva actividad";
-    els.btnDelete.style.display = record ? "inline-block" : "none";
+    var estadoBadge = record ? (' <span class="badge ' + estadoBadgeClass(record.estado) + '">' + esc(record.estado) + '</span>') : '';
+    els.modalTitle.innerHTML = (record ? "Detalle / edición de actividad" : "Nueva actividad") + estadoBadge;
+    els.btnDelete.style.display = (record && !isObservador) ? "inline-block" : "none";
     els.btnPdfSingle.style.display = record ? "inline-block" : "none";
     els.maintForm.reset();
+    setFormReadOnly(false);
     els.fId.value = record ? record.id : "";
     els.fProveedor.value = "";
     els.fTipo.value = "";
     els.fInspector.value = "";
     els.fInspectorVNA.value = "";
     els.fResponsable.value = "";
+    els.fCancelado.checked = false;
 
     if(record){
-      els.fFecha.value = record.fecha || "";
+      els.fFechaInicio.value = record.fechaInicio || "";
+      els.fFechaFin.value = record.fechaFin || "";
+      els.fCancelado.checked = !!record.cancelado;
       ensureOptionExists(els.fProveedor, record.proveedor);
       els.fProveedor.value = record.proveedor || "";
       ensureOptionExists(els.fTipo, record.tipoEquipo);
@@ -1297,8 +1404,9 @@
       var radio = els.maintForm.querySelector('input[name="tipoMantenimiento"][value="' + record.tipoMantenimiento + '"]');
       if(radio) radio.checked = true;
     } else if(prefillDate){
-      els.fFecha.value = prefillDate;
+      els.fFechaInicio.value = prefillDate;
     }
+    if(isObservador) setFormReadOnly(true);
     els.overlay.classList.add("active");
   }
   function closeModal(){
@@ -1310,7 +1418,8 @@
   els.overlay.addEventListener("click", function(e){ if(e.target === els.overlay) closeModal(); });
   document.addEventListener("keydown", function(e){
     if(e.key !== "Escape") return;
-    if(els.userOverlay.classList.contains("active")) closeUserModal();
+    if(els.passwordOverlay.classList.contains("active")) closePasswordModal();
+    else if(els.userOverlay.classList.contains("active")) closeUserModal();
     else if(els.catalogOverlay.classList.contains("active")) closeCatalogModal();
     else if(els.overlay.classList.contains("active")) closeModal();
   });
@@ -1320,10 +1429,17 @@
     var tipoMantRadio = els.maintForm.querySelector('input[name="tipoMantenimiento"]:checked');
     if(!tipoMantRadio){ alert("Seleccione el tipo de mantenimiento (Preventivo, Correctivo o Evolutivo)."); return; }
 
+    if(els.fFechaFin.value && els.fFechaFin.value < els.fFechaInicio.value){
+      alert("La Fecha de Finalización no puede ser anterior a la Fecha de Inicio.");
+      return;
+    }
+
     var data = {
       tipoMantenimiento: tipoMantRadio.value,
       proveedor: els.fProveedor.value.trim(),
-      fecha: els.fFecha.value,
+      fechaInicio: els.fFechaInicio.value,
+      fechaFin: els.fFechaFin.value,
+      cancelado: els.fCancelado.checked,
       descripcion: els.fDescripcion.value.trim(),
       tipoEquipo: els.fTipo.value,
       responsableVNA: els.fResponsable.value,
@@ -1461,12 +1577,12 @@
 
   // ---------- Excel ----------
   function downloadExcel(list){
-    var headerCols = ["ID Actividad","Fecha","Tipo","Equipamiento","Descripción","Proveedor","Responsable VNA","Inspector AAyC","Inspector VNA","Nota de Pedido","Orden de Servicio","Comentarios"];
+    var headerCols = ["ID Actividad","Fecha de Inicio","Fecha de Finalización","Estado","Tipo","Equipamiento","Descripción","Proveedor","Responsable VNA","Inspector AAyC","Inspector VNA","Nota de Pedido","Orden de Servicio","Comentarios"];
     var headerXml = '<Row ss:StyleID="Header">' + headerCols.map(function(h){
       return '<Cell><Data ss:Type="String">' + esc(h) + '</Data></Cell>';
     }).join("") + '</Row>';
     var rowsXml = list.map(function(r){
-      var vals = [r.idActividad, fmtDate(r.fecha), r.tipoMantenimiento, r.tipoEquipo, r.descripcion, r.proveedor,
+      var vals = [r.idActividad, fmtDate(r.fechaInicio), fmtDate(r.fechaFin), r.estado, r.tipoMantenimiento, r.tipoEquipo, r.descripcion, r.proveedor,
         r.responsableVNA, r.inspector, r.inspectorVNA, r.notaPedido, r.ordenServicio, r.comentarios];
       return '<Row>' + vals.map(function(v){
         return '<Cell><Data ss:Type="String">' + esc(v) + '</Data></Cell>';
@@ -1501,12 +1617,14 @@
 
   function printSingle(r){
     var html = printHeaderHtml("Vía Navegable Troncal · Reporte individual de actividad");
-    html += '<div class="print-title">Actividad del ' + fmtDate(r.fecha) + '</div>';
+    html += '<div class="print-title">Actividad del ' + fmtDate(r.fechaInicio) + '</div>';
     html += '<table class="print-grid">' +
       row("ID Actividad", r.idActividad) +
+      row("Estado", r.estado) +
       row("Tipo de mantenimiento", r.tipoMantenimiento) +
       row("Tipo de equipamiento", r.tipoEquipo) +
-      row("Fecha de realización", fmtDate(r.fecha)) +
+      row("Fecha de Inicio", fmtDate(r.fechaInicio)) +
+      row("Fecha de Finalización", fmtDate(r.fechaFin)) +
       row("Proveedor", r.proveedor) +
       row("Descripción", r.descripcion) +
       row("Responsable VNA", r.responsableVNA) +
@@ -1523,14 +1641,16 @@
   function printList(list){
     var html = printHeaderHtml("Vía Navegable Troncal · Reporte de actividades (" + list.length + " registro(s))");
     html += '<table class="print-table"><thead><tr>' +
-      '<th>ID</th><th>Fecha</th><th>Tipo</th><th>Equipamiento</th><th>Proveedor</th>' +
+      '<th>ID</th><th>Fecha Inicio</th><th>Fecha Fin</th><th>Estado</th><th>Tipo</th><th>Equipamiento</th><th>Proveedor</th>' +
       '<th>Responsable VNA</th><th>Inspector AAyC</th><th>Inspector VNA</th>' +
       '<th>Nota de pedido</th><th>Orden de Servicio</th><th>Descripción</th>' +
     '</tr></thead><tbody>';
     list.forEach(function(r){
       html += '<tr>' +
         '<td>' + esc(r.idActividad) + '</td>' +
-        '<td>' + fmtDate(r.fecha) + '</td>' +
+        '<td>' + fmtDate(r.fechaInicio) + '</td>' +
+        '<td>' + fmtDate(r.fechaFin) + '</td>' +
+        '<td>' + esc(r.estado) + '</td>' +
         '<td>' + esc(r.tipoMantenimiento) + '</td>' +
         '<td>' + esc(r.tipoEquipo) + '</td>' +
         '<td>' + esc(r.proveedor) + '</td>' +
@@ -1586,12 +1706,15 @@
     els.loginScreen.style.display = "flex";
     els.appRoot.style.display = "none";
   }
+  var ROLE_LABELS = { admin: "Administrador", editor: "Editor", observador: "Observador" };
+
   function showApp(){
     els.loginScreen.style.display = "none";
     els.appRoot.style.display = "block";
-    document.body.classList.toggle("role-editor", currentUser.rol !== "admin");
+    document.body.classList.toggle("non-admin", currentUser.rol !== "admin");
+    document.body.classList.toggle("role-observador", currentUser.rol === "observador");
     els.userBadgeName.textContent = currentUser.nombreCompleto;
-    els.userBadgeRole.textContent = currentUser.rol === "admin" ? "Administrador" : "Editor";
+    els.userBadgeRole.textContent = ROLE_LABELS[currentUser.rol] || currentUser.rol;
   }
 
   async function boot(){
@@ -1623,6 +1746,46 @@
     try{ await apiFetch("auth.php?action=logout", { method: "POST" }); }catch(e){ /* no-op */ }
     currentUser = null;
     location.reload();
+  });
+
+  // ---------- cambiar mi contraseña ----------
+  function openPasswordModal(){
+    els.passwordForm.reset();
+    els.passwordOverlay.classList.add("active");
+    els.miPasswordActual.focus();
+  }
+  function closePasswordModal(){
+    els.passwordOverlay.classList.remove("active");
+  }
+  els.btnMiPassword.addEventListener("click", openPasswordModal);
+  els.btnClosePasswordModal.addEventListener("click", closePasswordModal);
+  els.btnCancelPassword.addEventListener("click", closePasswordModal);
+  els.passwordOverlay.addEventListener("click", function(e){ if(e.target === els.passwordOverlay) closePasswordModal(); });
+
+  els.passwordForm.addEventListener("submit", async function(e){
+    e.preventDefault();
+    var actual = els.miPasswordActual.value;
+    var nueva = els.miPasswordNueva.value;
+    var confirmar = els.miPasswordConfirm.value;
+    if(nueva.length < 8){
+      alert("La nueva contraseña debe tener al menos 8 caracteres.");
+      return;
+    }
+    if(nueva !== confirmar){
+      alert("La confirmación de la nueva contraseña no coincide.");
+      return;
+    }
+    try{
+      await apiFetch("auth.php?action=change_password", {
+        method: "POST",
+        body: JSON.stringify({ passwordActual: actual, passwordNueva: nueva })
+      });
+    }catch(err){
+      alert(err.message);
+      return;
+    }
+    closePasswordModal();
+    alert("Contraseña actualizada correctamente.");
   });
 
   (async function init(){
