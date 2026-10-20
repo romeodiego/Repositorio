@@ -58,9 +58,24 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   antes de subir el código. La versión offline (`mantenimientos_vnt.html`)
   sigue intacta y no depende de nada de esto.
 - Dentro de esa variante, pestaña **"👤 Usuarios"** (solo admin): alta,
-  edición (nombre/rol/reseteo de contraseña) y activar/desactivar usuarios
-  desde la propia app, sin necesidad de usar curl contra la API. Un admin
-  no puede cambiarse el rol ni desactivarse a sí mismo desde ahí.
+  edición (nombre/rol/reseteo de contraseña, con confirmación) y
+  activar/desactivar usuarios desde la propia app, sin necesidad de usar
+  curl contra la API. Un admin no puede cambiarse el rol ni desactivarse a
+  sí mismo desde ahí.
+- Tercer rol de usuario: **observador** (solo lectura: recorrer
+  actividades y descargar PDF/Excel, sin crear/editar/borrar nada; no ve
+  Catálogos ni Usuarios). Son 3 roles en total: admin, editor, observador.
+  Cualquier usuario, de cualquier rol, puede cambiar su propia contraseña
+  desde "🔑 Mi contraseña" en el encabezado.
+- En esa variante, "Fecha de realización" se separó en **Fecha de
+  Inicio** (obligatoria) y **Fecha de Finalización** (opcional, confirma
+  que la actividad terminó). Se agregó **Estado** (Planificado / En
+  Proceso / Finalizado / Cancelado), calculado por la API en cada lectura
+  (no se guarda ni necesita un proceso en segundo plano): Planificado si
+  la fecha de inicio es futura, En Proceso al llegar esa fecha, Finalizado
+  al cargar fecha de finalización, Cancelado por un checkbox manual que
+  anula la actividad sin borrar el registro. Visible en el listado, el
+  calendario y como filtro.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido
