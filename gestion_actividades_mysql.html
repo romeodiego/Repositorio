@@ -90,6 +90,8 @@
   }
 
   main{max-width:1240px;margin:0 auto;padding:0 20px 60px;}
+  body.view-calendar nav.view-tabs,
+  body.view-calendar main{max-width:none;}
   .panel{
     background:var(--card);border:1px solid var(--border);border-radius:0 10px 10px 10px;
     box-shadow:var(--shadow);padding:22px;margin-top:0;
@@ -186,6 +188,9 @@
   .list-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:10px;}
   .list-toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;}
   .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+  .list-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;}
+  .list-pagination button:disabled{opacity:.4;cursor:not-allowed;}
+  .list-pagination .page-info{font-size:13px;color:var(--text-muted);}
   table{width:100%;border-collapse:collapse;font-size:13px;min-width:920px;}
   thead th{
     background:var(--primary);color:#fff;text-align:left;padding:10px 12px;font-size:12px;
@@ -198,7 +203,8 @@
   .badge.preventivo{background:var(--accent-dark);}
   .badge.correctivo{background:var(--danger);}
   .badge.evolutivo{background:var(--primary-light);}
-  .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .row-actions{display:flex;gap:6px;flex-wrap:nowrap;}
+  .btn-icon{padding:6px 10px;font-size:14.5px;line-height:1;}
   .cell-desc{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px;color:var(--text-muted);margin-top:2px;}
   .empty-state{text-align:center;padding:40px 10px;color:var(--text-muted);}
   .empty-state svg{opacity:.5;margin-bottom:10px;}
@@ -241,10 +247,10 @@
   .radio-group label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;}
   .radio-group input{width:auto;}
   .tipo-mant-group{display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;}
-  .tipo-mant-option{
+  .form-grid label.tipo-mant-option{
     display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:20px;
-    cursor:pointer;font-weight:700;font-size:13px;text-transform:none;letter-spacing:0;
-    color:#fff;opacity:.4;transition:opacity .15s,box-shadow .15s;
+    cursor:pointer;font-weight:800;font-size:13px;text-transform:none;letter-spacing:0;
+    color:#000;opacity:.4;transition:opacity .15s,box-shadow .15s;
   }
   .tipo-mant-option.is-checked{opacity:1;box-shadow:0 2px 6px rgba(0,0,0,.25);}
   .tipo-mant-option input{width:auto;accent-color:#fff;}
@@ -485,6 +491,11 @@
     </div>
     <div class="empty-state" id="emptyState" style="display:none;">
       <div>No hay mantenimientos registrados con estos filtros.</div>
+    </div>
+    <div class="list-pagination" id="listPagination">
+      <button type="button" class="btn-light btn-sm" id="btnListPrevPage">‹ Anterior</button>
+      <span class="page-info" id="listPageInfo"></span>
+      <button type="button" class="btn-light btn-sm" id="btnListNextPage">Siguiente ›</button>
     </div>
   </section>
 
@@ -861,6 +872,7 @@
    "chartSubcontratoTitle","chartSubcontratoPie","chartSubcontratoLegend",
    "fSearch","fTipoMant","fEstado","fTipoEquipo","fDesde","fHasta","btnClearFilters",
    "listCount","btnPdfList","tableBody","emptyState",
+   "listPagination","btnListPrevPage","btnListNextPage","listPageInfo",
    "overlay","modalTitle","btnCloseModal","maintForm","fId","fFechaInicio","fFechaFin","fCancelado","fProveedor",
    "fTipo","fDescripcion","fResponsable","fInspector","fInspectorVNA","fNota","fOrdenServicio","fComentarios",
    "btnDelete","btnPdfSingle","btnCancel","btnGuardarActividad","printArea",
@@ -893,8 +905,10 @@
     calYear: (new Date()).getFullYear(),
     calMonth: (new Date()).getMonth(),
     editingId: null,
-    view: "calendar"
+    view: "calendar",
+    listPage: 1
   };
+  var LIST_PAGE_SIZE = 20;
   var catalogInlineTarget = null;
 
   // ---------- helpers ----------
@@ -1215,6 +1229,7 @@
   function switchView(view){
     if((view === "catalogos" || view === "usuarios") && currentUser && currentUser.rol !== "admin") view = "calendar";
     state.view = view;
+    document.body.classList.toggle("view-calendar", view === "calendar");
     els.viewCalendar.classList.toggle("active", view === "calendar");
     els.viewList.classList.toggle("active", view === "list");
     els.viewCatalogos.classList.toggle("active", view === "catalogos");
@@ -1444,13 +1459,26 @@
     els.listCount.textContent = filtered.length + " actividad(es) encontrada(s) de " + state.records.length + " en total.";
     els.emptyState.style.display = filtered.length ? "none" : "block";
 
+    var totalPages = Math.max(1, Math.ceil(filtered.length / LIST_PAGE_SIZE));
+    if(state.listPage > totalPages) state.listPage = totalPages;
+    if(state.listPage < 1) state.listPage = 1;
+    var startIdx = (state.listPage - 1) * LIST_PAGE_SIZE;
+    var pageRecords = filtered.slice(startIdx, startIdx + LIST_PAGE_SIZE);
+
+    els.listPagination.style.display = filtered.length > LIST_PAGE_SIZE ? "flex" : "none";
+    els.listPageInfo.textContent = filtered.length
+      ? "Página " + state.listPage + " de " + totalPages + " (mostrando " + (startIdx + 1) + "–" + (startIdx + pageRecords.length) + " de " + filtered.length + ")"
+      : "";
+    els.btnListPrevPage.disabled = state.listPage <= 1;
+    els.btnListNextPage.disabled = state.listPage >= totalPages;
+
     var isObservador = currentUser && currentUser.rol === "observador";
-    els.tableBody.innerHTML = filtered.map(function(r){
-      var acciones = '<button type="button" class="btn-light btn-sm" data-action="edit" data-id="' + r.id + '">' +
-          (isObservador ? "Ver" : "Ver / Editar") + '</button>' +
-        '<button type="button" class="btn-light btn-sm" data-action="pdf" data-id="' + r.id + '">PDF</button>';
+    els.tableBody.innerHTML = pageRecords.map(function(r){
+      var acciones = '<button type="button" class="btn-light btn-sm btn-icon" data-action="edit" data-id="' + r.id + '" title="' +
+          (isObservador ? "Ver" : "Ver / Editar") + '">' + (isObservador ? "👁️" : "✏️") + '</button>' +
+        '<button type="button" class="btn-light btn-sm btn-icon" data-action="pdf" data-id="' + r.id + '" title="Descargar PDF">📄</button>';
       if(!isObservador){
-        acciones += '<button type="button" class="btn-danger btn-sm" data-action="del" data-id="' + r.id + '">Eliminar</button>';
+        acciones += '<button type="button" class="btn-danger btn-sm btn-icon" data-action="del" data-id="' + r.id + '" title="Eliminar">🗑️</button>';
       }
       return '<tr data-id="' + r.id + '">' +
         '<td>' + fmtDate(r.fechaInicio) + '</td>' +
@@ -1465,6 +1493,15 @@
       '</tr>';
     }).join("");
   }
+
+  els.btnListPrevPage.addEventListener("click", function(){
+    state.listPage--;
+    renderList();
+  });
+  els.btnListNextPage.addEventListener("click", function(){
+    state.listPage++;
+    renderList();
+  });
 
   els.tableBody.addEventListener("dblclick", function(e){
     var tr = e.target.closest("tr");
@@ -1483,12 +1520,13 @@
   });
 
   [els.fSearch,els.fTipoMant,els.fEstado,els.fTipoEquipo,els.fDesde,els.fHasta].forEach(function(el){
-    el.addEventListener("input", renderList);
-    el.addEventListener("change", renderList);
+    el.addEventListener("input", function(){ state.listPage = 1; renderList(); });
+    el.addEventListener("change", function(){ state.listPage = 1; renderList(); });
   });
   els.btnClearFilters.addEventListener("click", function(){
     els.fSearch.value = ""; els.fTipoMant.value = ""; els.fEstado.value = ""; els.fTipoEquipo.value = "";
     els.fDesde.value = ""; els.fHasta.value = "";
+    state.listPage = 1;
     renderList();
   });
 

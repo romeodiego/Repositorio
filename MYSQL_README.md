@@ -159,6 +159,25 @@ actualizan al navegar entre meses):
 Si el mes mostrado no tiene actividades cargadas, cada gráfico muestra el
 mensaje "Sin actividades este mes" en lugar de un gráfico vacío.
 
+La pestaña **Calendario** (calendario + gráficos) ocupa el ancho completo
+de la página, a diferencia de las demás pestañas que mantienen un ancho
+máximo centrado. Las columnas de los días de la semana usan ancho
+flexible, de modo que las 7 columnas siempre se ven completas sin scroll
+horizontal, sea cual sea el ancho de la ventana.
+
+## Paginado del Detalle de Actividades
+
+El listado de la pestaña **Detalle de Actividades** se pagina de a 20
+filas. Los controles "‹ Anterior" / "Siguiente ›" y el indicador de página
+aparecen debajo de la tabla solo cuando hay más de 20 resultados con los
+filtros aplicados. Cambiar cualquier filtro vuelve a la página 1. Las
+descargas de Excel y PDF siempre incluyen **todos** los resultados
+filtrados, no solo los de la página visible.
+
+La columna **Acciones** usa íconos (✏️ editar / ver, 📄 descargar PDF, 🗑️
+eliminar) en lugar de texto, alineados en una sola línea horizontal; cada
+botón conserva su texto como tooltip.
+
 ## Diferencias respecto a la versión offline
 
 - El **Id de Actividad** (clave primaria de la base) no aparece en el

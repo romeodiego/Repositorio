@@ -89,6 +89,19 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   **Subcontrato** (Crux Marine, ACG —incluye "American Consulting",
   TecPortOne, y el resto agrupado en "Otros"). Muestran "Sin actividades
   este mes" cuando corresponde y se actualizan al navegar entre meses.
+  Esa pestaña (calendario + gráficos) ocupa el ancho completo de la
+  página (a diferencia de las demás, que quedan centradas con ancho
+  máximo), y las columnas de los días son de ancho flexible: la semana
+  completa (7 días) se ve siempre sin scroll horizontal.
+- En esa variante, el texto de las etiquetas del selector de **Tipo de
+  Mantenimiento** (en Nueva Actividad) es negro intenso y negrita, para
+  mejor contraste sobre los colores de fondo.
+- El listado de **Detalle de Actividades** de esa variante está paginado
+  de a 20 filas (controles Anterior/Siguiente debajo de la tabla, se
+  resetea a la página 1 al cambiar un filtro); las descargas de
+  Excel/PDF siguen incluyendo todos los resultados filtrados, no solo la
+  página visible. La columna Acciones usa íconos (✏️ / 📄 / 🗑️) en una
+  sola línea en vez de texto, con el texto disponible como tooltip.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido
