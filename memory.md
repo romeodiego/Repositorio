@@ -89,10 +89,9 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   **Subcontrato** (Crux Marine, ACG —incluye "American Consulting",
   TecPortOne, y el resto agrupado en "Otros"). Muestran "Sin actividades
   este mes" cuando corresponde y se actualizan al navegar entre meses.
-  Esa pestaña (calendario + gráficos) ocupa el ancho completo de la
-  página (a diferencia de las demás, que quedan centradas con ancho
-  máximo), y las columnas de los días son de ancho flexible: la semana
-  completa (7 días) se ve siempre sin scroll horizontal.
+  La semana empieza en **lunes** (Lun a Dom). Las columnas de los días
+  son de ancho flexible y parejo: la semana completa (7 días) se ve
+  siempre sin scroll horizontal.
 - En esa variante, el texto de las etiquetas del selector de **Tipo de
   Mantenimiento** (en Nueva Actividad) es negro intenso y negrita, para
   mejor contraste sobre los colores de fondo.
@@ -101,7 +100,16 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   resetea a la página 1 al cambiar un filtro); las descargas de
   Excel/PDF siguen incluyendo todos los resultados filtrados, no solo la
   página visible. La columna Acciones usa íconos (✏️ / 📄 / 🗑️) en una
-  sola línea en vez de texto, con el texto disponible como tooltip.
+  sola línea en vez de texto, con el texto disponible como tooltip. Esa
+  pestaña también ocupa ahora el ancho completo de la página (igual que
+  Calendario), y su tabla incluye además las columnas **Nota de Pedido**
+  y **Orden de Servicio**.
+- Pendiente de decisión del usuario: en esa misma pestaña había pedido
+  cambiar el nombre de la columna "Inspector VNA" por "Responsable VNA",
+  pero esa última ya existe como columna separada (campo obligatorio,
+  distinto de Inspector VNA); al consultarle, el usuario pidió no
+  considerar ese cambio por ahora, así que ambas columnas se mantienen
+  tal cual estaban.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido

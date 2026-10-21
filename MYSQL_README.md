@@ -159,16 +159,20 @@ actualizan al navegar entre meses):
 Si el mes mostrado no tiene actividades cargadas, cada gráfico muestra el
 mensaje "Sin actividades este mes" en lugar de un gráfico vacío.
 
-La pestaña **Calendario** (calendario + gráficos) ocupa el ancho completo
-de la página, a diferencia de las demás pestañas que mantienen un ancho
-máximo centrado. Las columnas de los días de la semana usan ancho
-flexible, de modo que las 7 columnas siempre se ven completas sin scroll
+La semana del calendario empieza en **lunes** (Lun a Dom). Las pestañas
+**Calendario** y **Detalle de Actividades** ocupan el ancho completo de
+la página; las demás (Catálogos, Usuarios) mantienen un ancho máximo
+centrado. Las columnas de los días de la semana usan ancho flexible, de
+modo que las 7 columnas siempre se ven completas y parejas, sin scroll
 horizontal, sea cual sea el ancho de la ventana.
 
 ## Paginado del Detalle de Actividades
 
-El listado de la pestaña **Detalle de Actividades** se pagina de a 20
-filas. Los controles "‹ Anterior" / "Siguiente ›" y el indicador de página
+La pestaña **Detalle de Actividades** también ocupa el ancho completo de
+la página; su tabla incluye, además de los campos originales, las
+columnas **Nota de Pedido** y **Orden de Servicio**.
+
+El listado se pagina de a 20 filas. Los controles "‹ Anterior" / "Siguiente ›" y el indicador de página
 aparecen debajo de la tabla solo cuando hay más de 20 resultados con los
 filtros aplicados. Cambiar cualquier filtro vuelve a la página 1. Las
 descargas de Excel y PDF siempre incluyen **todos** los resultados

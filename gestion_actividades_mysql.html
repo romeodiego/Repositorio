@@ -91,7 +91,9 @@
 
   main{max-width:1240px;margin:0 auto;padding:0 20px 60px;}
   body.view-calendar nav.view-tabs,
-  body.view-calendar main{max-width:none;}
+  body.view-calendar main,
+  body.view-list nav.view-tabs,
+  body.view-list main{max-width:none;}
   .panel{
     background:var(--card);border:1px solid var(--border);border-radius:0 10px 10px 10px;
     box-shadow:var(--shadow);padding:22px;margin-top:0;
@@ -142,7 +144,7 @@
   }
   .cal-cell{
     background:#fff;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-    min-height:132px;padding:6px;position:relative;display:flex;flex-direction:column;gap:4px;
+    min-height:132px;min-width:0;padding:6px;position:relative;display:flex;flex-direction:column;gap:4px;
   }
   .cal-cell:nth-child(7n){border-right:none;}
   .cal-cell.other-month{background:#f7fafb;}
@@ -191,7 +193,7 @@
   .list-pagination{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:14px;}
   .list-pagination button:disabled{opacity:.4;cursor:not-allowed;}
   .list-pagination .page-info{font-size:13px;color:var(--text-muted);}
-  table{width:100%;border-collapse:collapse;font-size:13px;min-width:920px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:1120px;}
   thead th{
     background:var(--primary);color:#fff;text-align:left;padding:10px 12px;font-size:12px;
     text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;
@@ -483,6 +485,8 @@
             <th>Responsable VNA</th>
             <th>Inspector AAyC</th>
             <th>Inspector VNA</th>
+            <th>Nota de Pedido</th>
+            <th>Orden de Servicio</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -1223,13 +1227,14 @@
   });
 
   var MONTH_NAMES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-  var WEEKDAYS = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+  var WEEKDAYS = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 
   // ---------- view switching ----------
   function switchView(view){
     if((view === "catalogos" || view === "usuarios") && currentUser && currentUser.rol !== "admin") view = "calendar";
     state.view = view;
     document.body.classList.toggle("view-calendar", view === "calendar");
+    document.body.classList.toggle("view-list", view === "list");
     els.viewCalendar.classList.toggle("active", view === "calendar");
     els.viewList.classList.toggle("active", view === "list");
     els.viewCatalogos.classList.toggle("active", view === "catalogos");
@@ -1259,7 +1264,7 @@
     });
 
     var firstOfMonth = new Date(y, m, 1);
-    var startOffset = firstOfMonth.getDay(); // 0=Dom
+    var startOffset = (firstOfMonth.getDay() + 6) % 7; // 0=Lun ... 6=Dom
     var daysInMonth = new Date(y, m + 1, 0).getDate();
     var daysInPrevMonth = new Date(y, m, 0).getDate();
 
@@ -1489,6 +1494,8 @@
         '<td>' + esc(r.responsableVNA) + '</td>' +
         '<td>' + esc(r.inspector) + '</td>' +
         '<td>' + esc(r.inspectorVNA) + '</td>' +
+        '<td>' + esc(r.notaPedido) + '</td>' +
+        '<td>' + esc(r.ordenServicio) + '</td>' +
         '<td class="row-actions">' + acciones + '</td>' +
       '</tr>';
     }).join("");
