@@ -97,6 +97,27 @@
   .view{display:none;}
   .view.active{display:block;}
 
+  /* ---------- CALENDAR CHARTS ---------- */
+  .calendar-layout{display:flex;gap:20px;align-items:flex-start;}
+  .calendar-charts{display:flex;flex-direction:column;gap:16px;width:220px;flex-shrink:0;}
+  .calendar-main{flex:1;min-width:0;}
+  .chart-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px;}
+  .chart-card h4{margin:0 0 10px;font-size:12px;color:var(--primary);text-transform:uppercase;letter-spacing:.3px;text-align:center;}
+  .pie-wrap{display:flex;justify-content:center;margin-bottom:10px;}
+  .pie{width:140px;height:140px;border-radius:50%;background:var(--bg);border:1px solid var(--border);}
+  .chart-legend{display:flex;flex-direction:column;gap:5px;font-size:11.5px;}
+  .chart-legend-row{display:flex;align-items:center;gap:7px;cursor:default;}
+  .chart-legend-row .swatch{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+  .chart-legend-row .lbl{color:var(--text);flex:1;}
+  .chart-legend-row .val{color:var(--text-muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .chart-empty{text-align:center;color:var(--text-muted);font-size:11.5px;padding:34px 0;}
+
+  @media (max-width:860px){
+    .calendar-layout{flex-direction:column;}
+    .calendar-charts{width:100%;flex-direction:row;flex-wrap:wrap;}
+    .chart-card{flex:1;min-width:200px;}
+  }
+
   /* ---------- CALENDAR TOOLBAR ---------- */
   .cal-toolbar{
     display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
@@ -219,6 +240,17 @@
   .radio-group{display:flex;gap:16px;padding:8px 0;}
   .radio-group label{display:flex;align-items:center;gap:6px;font-size:13.5px;font-weight:600;color:var(--text);text-transform:none;letter-spacing:0;}
   .radio-group input{width:auto;}
+  .tipo-mant-group{display:flex;gap:10px;flex-wrap:wrap;padding:8px 0;}
+  .tipo-mant-option{
+    display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:20px;
+    cursor:pointer;font-weight:700;font-size:13px;text-transform:none;letter-spacing:0;
+    color:#fff;opacity:.4;transition:opacity .15s,box-shadow .15s;
+  }
+  .tipo-mant-option.is-checked{opacity:1;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+  .tipo-mant-option input{width:auto;accent-color:#fff;}
+  .tipo-mant-preventivo{background:var(--accent-dark);}
+  .tipo-mant-correctivo{background:var(--danger);}
+  .tipo-mant-evolutivo{background:var(--primary-light);}
   .hint{font-size:11.5px;color:var(--text-muted);margin-top:4px;}
 
   /* ---------- CATALOGOS ---------- */
@@ -343,21 +375,41 @@
 <main>
   <!-- ================= CALENDAR VIEW ================= -->
   <section class="view active panel" id="viewCalendar">
-    <div class="cal-toolbar">
-      <div class="cal-nav">
-        <button class="btn-light btn-sm" id="btnPrevMonth">‹ Mes anterior</button>
-        <h2 id="calTitle">—</h2>
-        <button class="btn-light btn-sm" id="btnNextMonth">Mes siguiente ›</button>
-        <button class="btn-ghost btn-sm" id="btnToday">Hoy</button>
+    <div class="calendar-layout">
+      <div class="calendar-charts">
+        <div class="chart-card">
+          <h4 id="chartEstadoTitle">Actividades por Estado</h4>
+          <div class="pie-wrap">
+            <div class="pie" id="chartEstadoPie"></div>
+          </div>
+          <div class="chart-legend" id="chartEstadoLegend"></div>
+        </div>
+        <div class="chart-card">
+          <h4 id="chartSubcontratoTitle">Actividades por Subcontrato</h4>
+          <div class="pie-wrap">
+            <div class="pie" id="chartSubcontratoPie"></div>
+          </div>
+          <div class="chart-legend" id="chartSubcontratoLegend"></div>
+        </div>
       </div>
-      <div class="legend">
-        <span><i class="dot" style="background:#049c74"></i> Preventivo</span>
-        <span><i class="dot" style="background:#ef476f"></i> Correctivo</span>
-        <span><i class="dot" style="background:#118ab2"></i> Evolutivo</span>
+      <div class="calendar-main">
+        <div class="cal-toolbar">
+          <div class="cal-nav">
+            <button class="btn-light btn-sm" id="btnPrevMonth">‹ Mes anterior</button>
+            <h2 id="calTitle">—</h2>
+            <button class="btn-light btn-sm" id="btnNextMonth">Mes siguiente ›</button>
+            <button class="btn-ghost btn-sm" id="btnToday">Hoy</button>
+          </div>
+          <div class="legend">
+            <span><i class="dot" style="background:#049c74"></i> Preventivo</span>
+            <span><i class="dot" style="background:#ef476f"></i> Correctivo</span>
+            <span><i class="dot" style="background:#118ab2"></i> Evolutivo</span>
+          </div>
+        </div>
+        <div class="cal-grid" id="calGrid"><!-- generado por JS --></div>
+        <p class="hint">Doble clic sobre un mantenimiento para ver el detalle y editarlo. Doble clic sobre un día vacío para crear uno nuevo en esa fecha.</p>
       </div>
     </div>
-    <div class="cal-grid" id="calGrid"><!-- generado por JS --></div>
-    <p class="hint">Doble clic sobre un mantenimiento para ver el detalle y editarlo. Doble clic sobre un día vacío para crear uno nuevo en esa fecha.</p>
   </section>
 
   <!-- ================= LIST VIEW ================= -->
@@ -538,10 +590,10 @@
         <div class="form-grid">
           <div class="full">
             <label>Tipo de mantenimiento *</label>
-            <div class="radio-group">
-              <label><input type="radio" name="tipoMantenimiento" value="Preventivo" required> Preventivo</label>
-              <label><input type="radio" name="tipoMantenimiento" value="Correctivo" required> Correctivo</label>
-              <label><input type="radio" name="tipoMantenimiento" value="Evolutivo" required> Evolutivo</label>
+            <div class="tipo-mant-group" id="tipoMantGroup">
+              <label class="tipo-mant-option tipo-mant-preventivo"><input type="radio" name="tipoMantenimiento" value="Preventivo" required> Preventivo</label>
+              <label class="tipo-mant-option tipo-mant-correctivo"><input type="radio" name="tipoMantenimiento" value="Correctivo" required> Correctivo</label>
+              <label class="tipo-mant-option tipo-mant-evolutivo"><input type="radio" name="tipoMantenimiento" value="Evolutivo" required> Evolutivo</label>
             </div>
           </div>
 
@@ -556,21 +608,21 @@
           </div>
 
           <div>
+            <label for="fTipo">Tipo de Equipamiento/Servicio *</label>
+            <div class="select-with-add">
+              <select id="fTipo" required>
+                <option value="" disabled selected>Seleccionar...</option>
+              </select>
+              <button type="button" class="btn-add-inline" id="btnAddTipoInline" title="Agregar nuevo tipo de equipamiento" data-admin-only>+</button>
+            </div>
+          </div>
+          <div>
             <label for="fProveedor">Proveedor *</label>
             <div class="select-with-add">
               <select id="fProveedor" required>
                 <option value="" disabled selected>Seleccionar...</option>
               </select>
               <button type="button" class="btn-add-inline" id="btnAddProveedorInline" title="Agregar nuevo proveedor" data-admin-only>+</button>
-            </div>
-          </div>
-          <div>
-            <label for="fTipo">Tipo de equipamiento *</label>
-            <div class="select-with-add">
-              <select id="fTipo" required>
-                <option value="" disabled selected>Seleccionar...</option>
-              </select>
-              <button type="button" class="btn-add-inline" id="btnAddTipoInline" title="Agregar nuevo tipo de equipamiento" data-admin-only>+</button>
             </div>
           </div>
 
@@ -805,6 +857,8 @@
   var els = {};
   ["btnNew","tabCalendar","tabList","tabCatalogos","viewCalendar","viewList","viewCatalogos",
    "btnPrevMonth","btnNextMonth","btnToday","calTitle","calGrid",
+   "chartEstadoTitle","chartEstadoPie","chartEstadoLegend",
+   "chartSubcontratoTitle","chartSubcontratoPie","chartSubcontratoLegend",
    "fSearch","fTipoMant","fEstado","fTipoEquipo","fDesde","fHasta","btnClearFilters",
    "listCount","btnPdfList","tableBody","emptyState",
    "overlay","modalTitle","btnCloseModal","maintForm","fId","fFechaInicio","fFechaFin","fCancelado","fProveedor",
@@ -1237,6 +1291,85 @@
     }
 
     els.calGrid.innerHTML = html;
+    renderCharts();
+  }
+
+  // ---------- gráficos de torta (mes mostrado en el calendario) ----------
+  var ESTADO_COLORS = {
+    "Planificado": "#118ab2",
+    "En Proceso": "#f4a261",
+    "Finalizado": "#049c74",
+    "Cancelado": "#5b7480"
+  };
+  var SUBCONTRATO_COLORS = {
+    "Crux Marine": "#6250d6",
+    "ACG": "#eda100",
+    "TecPortOne": "#e87ba4",
+    "Otros": "#8a8f98"
+  };
+  function subcontratoBucket(proveedor){
+    if(proveedor === "Crux Marine") return "Crux Marine";
+    if(proveedor === "American Consulting") return "ACG";
+    if(proveedor === "TecPortOne") return "TecPortOne";
+    return "Otros";
+  }
+
+  function renderPieChart(pieEl, legendEl, counts, colorMap, order){
+    var total = 0;
+    order.forEach(function(k){ total += (counts[k] || 0); });
+
+    if(total === 0){
+      pieEl.style.background = "var(--bg)";
+      legendEl.innerHTML = '<div class="chart-empty">Sin actividades este mes</div>';
+      return;
+    }
+
+    var stops = [];
+    var acc = 0;
+    order.forEach(function(k){
+      var v = counts[k] || 0;
+      if(v === 0) return;
+      var from = (acc / total) * 100;
+      acc += v;
+      var to = (acc / total) * 100;
+      stops.push(colorMap[k] + " " + from.toFixed(2) + "% " + to.toFixed(2) + "%");
+    });
+    pieEl.style.background = "conic-gradient(" + stops.join(", ") + ")";
+
+    legendEl.innerHTML = order.map(function(k){
+      var v = counts[k] || 0;
+      if(v === 0) return "";
+      var pct = Math.round((v / total) * 100);
+      return '<div class="chart-legend-row" title="' + esc(k) + ": " + v + " (" + pct + "%)" + '">' +
+        '<span class="swatch" style="background:' + colorMap[k] + ';"></span>' +
+        '<span class="lbl">' + esc(k) + '</span>' +
+        '<span class="val">' + v + ' (' + pct + '%)</span>' +
+      '</div>';
+    }).join("");
+  }
+
+  function renderCharts(){
+    var y = state.calYear, m = state.calMonth;
+    els.chartEstadoTitle.textContent = "Estado · " + MONTH_NAMES[m] + " " + y;
+    els.chartSubcontratoTitle.textContent = "Subcontrato · " + MONTH_NAMES[m] + " " + y;
+
+    var delMes = state.records.filter(function(r){
+      var d = new Date(r.fechaInicio + "T00:00:00");
+      return d.getFullYear() === y && d.getMonth() === m;
+    });
+
+    var estadoCounts = {};
+    var subcontratoCounts = {};
+    delMes.forEach(function(r){
+      estadoCounts[r.estado] = (estadoCounts[r.estado] || 0) + 1;
+      var bucket = subcontratoBucket(r.proveedor);
+      subcontratoCounts[bucket] = (subcontratoCounts[bucket] || 0) + 1;
+    });
+
+    renderPieChart(els.chartEstadoPie, els.chartEstadoLegend, estadoCounts, ESTADO_COLORS,
+      ["Planificado", "En Proceso", "Finalizado", "Cancelado"]);
+    renderPieChart(els.chartSubcontratoPie, els.chartSubcontratoLegend, subcontratoCounts, SUBCONTRATO_COLORS,
+      ["Crux Marine", "ACG", "TecPortOne", "Otros"]);
   }
 
   els.btnPrevMonth.addEventListener("click", function(){
@@ -1375,6 +1508,7 @@
     els.btnPdfSingle.style.display = record ? "inline-block" : "none";
     els.maintForm.reset();
     setFormReadOnly(false);
+    updateTipoMantVisual();
     els.fId.value = record ? record.id : "";
     els.fProveedor.value = "";
     els.fTipo.value = "";
@@ -1403,6 +1537,7 @@
       els.fComentarios.value = record.comentarios || "";
       var radio = els.maintForm.querySelector('input[name="tipoMantenimiento"][value="' + record.tipoMantenimiento + '"]');
       if(radio) radio.checked = true;
+      updateTipoMantVisual();
     } else if(prefillDate){
       els.fFechaInicio.value = prefillDate;
     }
@@ -1415,14 +1550,21 @@
   }
   els.btnCloseModal.addEventListener("click", closeModal);
   els.btnCancel.addEventListener("click", closeModal);
-  els.overlay.addEventListener("click", function(e){ if(e.target === els.overlay) closeModal(); });
+  // El formulario de actividad solo se cierra con Guardar o Cancelar: ni un
+  // clic afuera ni Escape lo descartan por accidente.
   document.addEventListener("keydown", function(e){
     if(e.key !== "Escape") return;
     if(els.passwordOverlay.classList.contains("active")) closePasswordModal();
     else if(els.userOverlay.classList.contains("active")) closeUserModal();
     else if(els.catalogOverlay.classList.contains("active")) closeCatalogModal();
-    else if(els.overlay.classList.contains("active")) closeModal();
   });
+
+  function updateTipoMantVisual(){
+    document.querySelectorAll("#tipoMantGroup .tipo-mant-option").forEach(function(opt){
+      opt.classList.toggle("is-checked", opt.querySelector("input").checked);
+    });
+  }
+  document.getElementById("tipoMantGroup").addEventListener("change", updateTipoMantVisual);
 
   els.maintForm.addEventListener("submit", async function(e){
     e.preventDefault();
@@ -1431,6 +1573,11 @@
 
     if(els.fFechaFin.value && els.fFechaFin.value < els.fFechaInicio.value){
       alert("La Fecha de Finalización no puede ser anterior a la Fecha de Inicio.");
+      return;
+    }
+    var hoyIso = new Date().toISOString().slice(0,10);
+    if(els.fFechaFin.value && els.fFechaFin.value > hoyIso){
+      alert("La Fecha de Finalización no puede ser una fecha futura.");
       return;
     }
 

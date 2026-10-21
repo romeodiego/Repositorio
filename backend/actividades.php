@@ -78,6 +78,9 @@ function validar_y_resolver(array $body): array {
     if ($fechaFin !== null && $fechaFin < $fechaInicio) {
         json_error('La Fecha de Finalización no puede ser anterior a la Fecha de Inicio.', 400);
     }
+    if ($fechaFin !== null && $fechaFin > date('Y-m-d')) {
+        json_error('La Fecha de Finalización no puede ser una fecha futura.', 400);
+    }
     $descripcion = trim($body['descripcion'] ?? '');
     if ($descripcion === '') {
         json_error('La descripción es obligatoria.', 400);

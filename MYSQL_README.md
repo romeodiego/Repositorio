@@ -132,6 +132,33 @@ proceso en segundo plano. "Cancelado" tiene prioridad sobre los demás: si
 se cancela una actividad ya finalizada, el registro completo se conserva,
 solo cambia la etiqueta.
 
+## Formulario de actividad
+
+- El formulario de **Nueva actividad** solo se cierra con los botones
+  **Guardar** o **Cancelar**: un clic fuera del formulario o la tecla Escape
+  ya no lo descartan por accidente (antes sí).
+- El campo "Tipo de equipamiento" pasó a llamarse **"Tipo de
+  Equipamiento/Servicio"**, y ahora aparece **antes** que el campo
+  Proveedor (antes el orden era Proveedor y luego Tipo de equipamiento).
+- La **Fecha de Finalización** no admite una fecha futura (debe ser hoy o
+  anterior); se valida tanto en el formulario como en el backend.
+- El selector de **Tipo de Mantenimiento** (Preventivo / Correctivo /
+  Evolutivo) usa los mismos colores que las etiquetas del listado de
+  Detalle de Actividades, con la opción elegida resaltada.
+
+## Gráficos del Calendario
+
+En el margen izquierdo de la pestaña **Calendario** se muestran dos
+gráficos de torta con las actividades del mes que se está mostrando (se
+actualizan al navegar entre meses):
+
+- **Por Estado**: Planificado, En Proceso, Finalizado, Cancelado.
+- **Por Subcontrato**: Crux Marine, ACG (incluye a "American Consulting"),
+  TecPortOne, y el resto de los proveedores agrupados en "Otros".
+
+Si el mes mostrado no tiene actividades cargadas, cada gráfico muestra el
+mensaje "Sin actividades este mes" en lugar de un gráfico vacío.
+
 ## Diferencias respecto a la versión offline
 
 - El **Id de Actividad** (clave primaria de la base) no aparece en el

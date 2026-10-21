@@ -76,6 +76,19 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   al cargar fecha de finalización, Cancelado por un checkbox manual que
   anula la actividad sin borrar el registro. Visible en el listado, el
   calendario y como filtro.
+- En esa variante, el formulario de **Nueva Actividad** ya no se cierra al
+  hacer clic afuera o apretar Escape (solo con Guardar/Cancelar); el campo
+  "Tipo de Equipamiento" se renombró a **"Tipo de Equipamiento/Servicio"**
+  y pasó a ubicarse antes que Proveedor; la **Fecha de Finalización** no
+  admite fechas futuras (validado en el formulario y en el backend); el
+  selector de **Tipo de Mantenimiento** usa los mismos colores que las
+  etiquetas de Detalle de Actividades, con la opción elegida resaltada.
+- En la pestaña **Calendario** de esa variante, a la izquierda del
+  calendario hay dos gráficos de torta (CSS puro, sin librerías) con las
+  actividades del mes que se está mostrando: uno por **Estado** y otro por
+  **Subcontrato** (Crux Marine, ACG —incluye "American Consulting",
+  TecPortOne, y el resto agrupado en "Otros"). Muestran "Sin actividades
+  este mes" cuando corresponde y se actualizan al navegar entre meses.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido
