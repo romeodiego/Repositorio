@@ -201,7 +201,7 @@
   tbody td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top;}
   tbody tr:hover{background:#f5fafb;}
   tbody tr:last-child td{border-bottom:none;}
-  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;}
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;color:#fff;white-space:nowrap;}
   .badge.preventivo{background:var(--accent-dark);}
   .badge.correctivo{background:var(--danger);}
   .badge.evolutivo{background:var(--primary-light);}
@@ -1490,7 +1490,7 @@
         '<td><span class="badge ' + badgeClass(r.tipoMantenimiento) + '">' + esc(r.tipoMantenimiento) + '</span></td>' +
         '<td><span class="badge ' + estadoBadgeClass(r.estado) + '">' + esc(r.estado) + '</span></td>' +
         '<td>' + esc(r.tipoEquipo) + '<div class="cell-desc" title="' + esc(r.descripcion) + '">' + esc(r.descripcion) + '</div></td>' +
-        '<td>' + esc(r.proveedor) + '</td>' +
+        '<td><strong>' + esc(r.proveedor) + '</strong></td>' +
         '<td>' + esc(r.responsableVNA) + '</td>' +
         '<td>' + esc(r.inspector) + '</td>' +
         '<td>' + esc(r.inspectorVNA) + '</td>' +
