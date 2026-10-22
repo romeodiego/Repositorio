@@ -480,7 +480,7 @@
             <th>Fecha</th>
             <th>Tipo</th>
             <th>Estado</th>
-            <th>Equipamiento</th>
+            <th>Equipamiento / Servicio</th>
             <th>Proveedor</th>
             <th>Responsable VNA</th>
             <th>Inspector AAyC</th>
@@ -1489,8 +1489,8 @@
         '<td>' + fmtDate(r.fechaInicio) + '</td>' +
         '<td><span class="badge ' + badgeClass(r.tipoMantenimiento) + '">' + esc(r.tipoMantenimiento) + '</span></td>' +
         '<td><span class="badge ' + estadoBadgeClass(r.estado) + '">' + esc(r.estado) + '</span></td>' +
-        '<td>' + esc(r.tipoEquipo) + '<div class="cell-desc" title="' + esc(r.descripcion) + '">' + esc(r.descripcion) + '</div></td>' +
-        '<td><strong>' + esc(r.proveedor) + '</strong></td>' +
+        '<td><strong>' + esc(r.tipoEquipo) + '</strong><div class="cell-desc" title="' + esc(r.descripcion) + '">' + esc(r.descripcion) + '</div></td>' +
+        '<td>' + esc(r.proveedor) + '</td>' +
         '<td>' + esc(r.responsableVNA) + '</td>' +
         '<td>' + esc(r.inspector) + '</td>' +
         '<td>' + esc(r.inspectorVNA) + '</td>' +

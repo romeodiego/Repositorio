@@ -182,7 +182,8 @@ La columna **Acciones** usa íconos (✏️ editar / ver, 📄 descargar PDF, �
 eliminar) en lugar de texto, alineados en una sola línea horizontal; cada
 botón conserva su texto como tooltip.
 
-El nombre del **Proveedor** se muestra en negrita, y la etiqueta de
+El nombre del **Equipamiento / Servicio** (antes "Equipamiento") se
+muestra en negrita; el **Proveedor** usa fuente normal. La etiqueta de
 **Estado** siempre queda en una sola línea (por ejemplo "En Proceso"),
 sin importar el ancho de la columna.
 

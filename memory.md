@@ -103,9 +103,10 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   sola línea en vez de texto, con el texto disponible como tooltip. Esa
   pestaña también ocupa ahora el ancho completo de la página (igual que
   Calendario), y su tabla incluye además las columnas **Nota de Pedido**
-  y **Orden de Servicio**. El nombre del Proveedor se muestra en negrita,
-  y las etiquetas de Estado (p. ej. "En Proceso") nunca se parten en dos
-  líneas.
+  y **Orden de Servicio**. La columna "Equipamiento" se renombró a
+  **"Equipamiento / Servicio"** y su dato se muestra en negrita; el
+  Proveedor usa fuente normal (sin negrita). Las etiquetas de Estado
+  (p. ej. "En Proceso") nunca se parten en dos líneas.
 - Pendiente de decisión del usuario: en esa misma pestaña había pedido
   cambiar el nombre de la columna "Inspector VNA" por "Responsable VNA",
   pero esa última ya existe como columna separada (campo obligatorio,
