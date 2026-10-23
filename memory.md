@@ -48,8 +48,7 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
 - **Nueva variante con base de datos real**: `gestion_actividades_mysql.html`
   + `backend/` (API en PHP puro) + `db/schema.sql` (esquema MySQL
   relacional). Resuelve "¿cómo comparto esto entre varios usuarios?": login
-  con usuarios y roles (`admin` ve y gestiona Catálogos; `editor` solo
-  actividades), datos compartidos en una base real en vez de
+  con usuarios y roles, datos compartidos en una base real en vez de
   `localStorage`. Incluye `id_actividad` como clave primaria oculta en el
   formulario pero presente en las descargas de Excel/PDF. Documentado en
   `MYSQL_README.md` (cómo importar el esquema, configurar
@@ -67,15 +66,20 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   Catálogos ni Usuarios). Son 3 roles en total: admin, editor, observador.
   Cualquier usuario, de cualquier rol, puede cambiar su propia contraseña
   desde "🔑 Mi contraseña" en el encabezado.
+- El rol **editor** tiene permiso completo sobre los **Catálogos**
+  (alta/baja/modificación, incluidos los botones "+" inline), igual que
+  `admin`; la única pestaña que sigue siendo exclusiva de `admin` es
+  "Usuarios".
 - En esa variante, "Fecha de realización" se separó en **Fecha de
   Inicio** (obligatoria) y **Fecha de Finalización** (opcional, confirma
   que la actividad terminó). Se agregó **Estado** (Planificado / En
-  Proceso / Finalizado / Cancelado), calculado por la API en cada lectura
-  (no se guarda ni necesita un proceso en segundo plano): Planificado si
-  la fecha de inicio es futura, En Proceso al llegar esa fecha, Finalizado
-  al cargar fecha de finalización, Cancelado por un checkbox manual que
-  anula la actividad sin borrar el registro. Visible en el listado, el
-  calendario y como filtro.
+  Proceso / Finalizado / Cancelado / Reprogramada), calculado por la API
+  en cada lectura (no se guarda ni necesita un proceso en segundo plano):
+  Planificado si la fecha de inicio es futura, En Proceso al llegar esa
+  fecha, Finalizado al cargar fecha de finalización, Cancelado por un
+  checkbox manual que anula la actividad sin borrar el registro,
+  Reprogramada al reprogramar la actividad (ver más abajo). Visible en el
+  listado, el calendario y como filtro.
 - En esa variante, el formulario de **Nueva Actividad** ya no se cierra al
   hacer clic afuera o apretar Escape (solo con Guardar/Cancelar); el campo
   "Tipo de Equipamiento" se renombró a **"Tipo de Equipamiento/Servicio"**
@@ -113,6 +117,17 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   distinto de Inspector VNA); al consultarle, el usuario pidió no
   considerar ese cambio por ahora, así que ambas columnas se mantienen
   tal cual estaban.
+- Nuevo catálogo **Motivos** (pestaña Catálogos, un único catálogo
+  compartido entre Cancelación y Reprogramación): cada motivo tiene
+  nombre y un tilde "Responsabilidad del proveedor". Al cancelar una
+  actividad ahora es obligatorio elegir un **Motivo de Cancelación**. Se
+  agregó la posibilidad de **Reprogramar** una actividad (botón "↻
+  Reprogramar", solo para Planificada/En Proceso): pide Motivo de
+  Reprogramación y Nueva Fecha de Inicio; la actividad origen pasa a
+  estado **Reprogramada** (nuevo estado, quinto además de Planificado/En
+  Proceso/Finalizado/Cancelado) y se crea una actividad nueva con la
+  nueva fecha, los mismos datos, y una referencia a la actividad origen.
+  Todo esto corre dentro de una transacción en el backend.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido

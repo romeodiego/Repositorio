@@ -15,8 +15,11 @@ const SELECT_ACTIVIDAD = "
         a.fecha_inicio    AS fechaInicio,
         a.fecha_fin       AS fechaFin,
         a.cancelado,
+        a.reprogramada,
+        a.reprogramada_de_id AS reprogramadaDeId,
         CASE
             WHEN a.cancelado = 1 THEN 'Cancelado'
+            WHEN a.reprogramada = 1 THEN 'Reprogramada'
             WHEN a.fecha_fin IS NOT NULL THEN 'Finalizado'
             WHEN a.fecha_inicio <= CURDATE() THEN 'En Proceso'
             ELSE 'Planificado'
@@ -29,13 +32,17 @@ const SELECT_ACTIVIDAD = "
         iv.nombre         AS inspectorVNA,
         a.nota_pedido     AS notaPedido,
         a.orden_servicio  AS ordenServicio,
-        a.comentarios
+        a.comentarios,
+        mc.nombre         AS motivoCancelacion,
+        mr.nombre         AS motivoReprogramacion
     FROM actividades a
     JOIN proveedores pr          ON pr.id = a.proveedor_id
     JOIN tipos_equipamiento te   ON te.id = a.tipo_equipamiento_id
     JOIN responsables_vna rv     ON rv.id = a.responsable_vna_id
     LEFT JOIN inspectores_aayc ia ON ia.id = a.inspector_aayc_id
     LEFT JOIN inspectores_vna iv  ON iv.id = a.inspector_vna_id
+    LEFT JOIN motivos mc          ON mc.id = a.motivo_cancelacion_id
+    LEFT JOIN motivos mr          ON mr.id = a.motivo_reprogramacion_id
 ";
 
 function resolver_id(string $tabla, ?string $nombre, bool $obligatorio, string $etiqueta): ?int {
@@ -86,11 +93,17 @@ function validar_y_resolver(array $body): array {
         json_error('La descripción es obligatoria.', 400);
     }
 
+    $cancelado = !empty($body['cancelado']) ? 1 : 0;
+    $motivoCancelacionId = $cancelado
+        ? resolver_id('motivos', $body['motivoCancelacion'] ?? '', true, 'Motivo de Cancelación')
+        : null;
+
     return [
         'tipo_mantenimiento' => $tipoMant,
         'fecha_inicio' => $fechaInicio,
         'fecha_fin' => $fechaFin,
-        'cancelado' => !empty($body['cancelado']) ? 1 : 0,
+        'cancelado' => $cancelado,
+        'motivo_cancelacion_id' => $motivoCancelacionId,
         'proveedor_id' => resolver_id('proveedores', $body['proveedor'] ?? '', true, 'Proveedor'),
         'tipo_equipamiento_id' => resolver_id('tipos_equipamiento', $body['tipoEquipo'] ?? '', true, 'Tipo de equipamiento'),
         'descripcion' => $descripcion,
@@ -119,6 +132,66 @@ if ($method === 'GET') {
 
 require_writer();
 
+// Reprogramar: marca la actividad origen como "Reprogramada" (sin borrarla)
+// y crea una actividad nueva, copiando sus datos, con la nueva fecha de
+// inicio y una referencia a la actividad origen.
+if ($method === 'POST' && ($_GET['accion'] ?? '') === 'reprogramar') {
+    $origenId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+    if ($origenId <= 0) {
+        json_error('Falta el parámetro id.', 400);
+    }
+
+    $stmt = db()->prepare(SELECT_ACTIVIDAD . ' WHERE a.id_actividad = ?');
+    $stmt->execute([$origenId]);
+    $origen = $stmt->fetch();
+    if (!$origen) {
+        json_error('Actividad no encontrada.', 404);
+    }
+    if ($origen['cancelado'] || $origen['reprogramada'] || $origen['estado'] === 'Finalizado') {
+        json_error('Solo se pueden reprogramar actividades en estado Planificado o En Proceso.', 409);
+    }
+
+    $body = read_json_body();
+    $nuevaFecha = validar_fecha((string)($body['nuevaFechaInicio'] ?? ''), 'Nueva Fecha de Inicio', true);
+    if ($nuevaFecha < date('Y-m-d')) {
+        json_error('La nueva Fecha de Inicio no puede ser anterior a hoy.', 400);
+    }
+    $motivoId = resolver_id('motivos', $body['motivoReprogramacion'] ?? '', true, 'Motivo de Reprogramación');
+
+    $user = current_user();
+    db()->beginTransaction();
+    try {
+        $stmt = db()->prepare('UPDATE actividades SET reprogramada = 1, motivo_reprogramacion_id = ? WHERE id_actividad = ?');
+        $stmt->execute([$motivoId, $origenId]);
+
+        $stmt = db()->prepare(
+            'INSERT INTO actividades
+                (tipo_mantenimiento, fecha_inicio, fecha_fin, cancelado, proveedor_id, tipo_equipamiento_id, descripcion,
+                 responsable_vna_id, inspector_aayc_id, inspector_vna_id, nota_pedido, orden_servicio,
+                 comentarios, creado_por, reprogramada_de_id)
+             SELECT tipo_mantenimiento, ?, NULL, 0, proveedor_id, tipo_equipamiento_id, descripcion,
+                    responsable_vna_id, inspector_aayc_id, inspector_vna_id, nota_pedido, orden_servicio,
+                    comentarios, ?, ?
+             FROM actividades WHERE id_actividad = ?'
+        );
+        $stmt->execute([$nuevaFecha, $user['id'], $origenId, $origenId]);
+        $nuevoId = (int)db()->lastInsertId();
+        db()->commit();
+    } catch (Throwable $e) {
+        db()->rollBack();
+        throw $e;
+    }
+
+    $stmt = db()->prepare(SELECT_ACTIVIDAD . ' WHERE a.id_actividad = ?');
+    $stmt->execute([$origenId]);
+    $origenActualizado = $stmt->fetch();
+    $stmt = db()->prepare(SELECT_ACTIVIDAD . ' WHERE a.id_actividad = ?');
+    $stmt->execute([$nuevoId]);
+    $nueva = $stmt->fetch();
+
+    json_response(['origen' => $origenActualizado, 'nueva' => $nueva], 201);
+}
+
 if ($method === 'POST') {
     $user = current_user();
     $body = read_json_body();
@@ -126,13 +199,13 @@ if ($method === 'POST') {
 
     $stmt = db()->prepare(
         'INSERT INTO actividades
-            (tipo_mantenimiento, fecha_inicio, fecha_fin, cancelado, proveedor_id, tipo_equipamiento_id, descripcion,
+            (tipo_mantenimiento, fecha_inicio, fecha_fin, cancelado, motivo_cancelacion_id, proveedor_id, tipo_equipamiento_id, descripcion,
              responsable_vna_id, inspector_aayc_id, inspector_vna_id, nota_pedido, orden_servicio,
              comentarios, creado_por)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
     $stmt->execute([
-        $datos['tipo_mantenimiento'], $datos['fecha_inicio'], $datos['fecha_fin'], $datos['cancelado'],
+        $datos['tipo_mantenimiento'], $datos['fecha_inicio'], $datos['fecha_fin'], $datos['cancelado'], $datos['motivo_cancelacion_id'],
         $datos['proveedor_id'], $datos['tipo_equipamiento_id'],
         $datos['descripcion'], $datos['responsable_vna_id'], $datos['inspector_aayc_id'], $datos['inspector_vna_id'],
         $datos['nota_pedido'], $datos['orden_servicio'], $datos['comentarios'], $user['id'],
@@ -155,14 +228,14 @@ if ($method === 'PUT') {
 
     $stmt = db()->prepare(
         'UPDATE actividades SET
-            tipo_mantenimiento = ?, fecha_inicio = ?, fecha_fin = ?, cancelado = ?, proveedor_id = ?,
+            tipo_mantenimiento = ?, fecha_inicio = ?, fecha_fin = ?, cancelado = ?, motivo_cancelacion_id = ?, proveedor_id = ?,
             tipo_equipamiento_id = ?, descripcion = ?,
             responsable_vna_id = ?, inspector_aayc_id = ?, inspector_vna_id = ?, nota_pedido = ?,
             orden_servicio = ?, comentarios = ?
          WHERE id_actividad = ?'
     );
     $stmt->execute([
-        $datos['tipo_mantenimiento'], $datos['fecha_inicio'], $datos['fecha_fin'], $datos['cancelado'],
+        $datos['tipo_mantenimiento'], $datos['fecha_inicio'], $datos['fecha_fin'], $datos['cancelado'], $datos['motivo_cancelacion_id'],
         $datos['proveedor_id'], $datos['tipo_equipamiento_id'],
         $datos['descripcion'], $datos['responsable_vna_id'], $datos['inspector_aayc_id'], $datos['inspector_vna_id'],
         $datos['nota_pedido'], $datos['orden_servicio'], $datos['comentarios'], $id,

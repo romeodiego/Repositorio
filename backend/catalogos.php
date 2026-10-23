@@ -37,6 +37,13 @@ const CATALOGOS = [
         'obligatorio' => true,
         'tieneProveedorSugerido' => false,
     ],
+    'motivos' => [
+        'tabla' => 'motivos',
+        'campoActividad' => ['motivo_cancelacion_id', 'motivo_reprogramacion_id'],
+        'obligatorio' => false,
+        'tieneProveedorSugerido' => false,
+        'tieneResponsabilidadProveedor' => true,
+    ],
 ];
 
 require_login();
@@ -55,6 +62,9 @@ function fila_a_json(array $row, array $def): array {
         $out['proveedorSugeridoId'] = $row['proveedor_sugerido_id'] !== null ? (int)$row['proveedor_sugerido_id'] : null;
         $out['proveedorSugerido'] = $row['proveedor_sugerido_nombre'] ?? null;
     }
+    if ($def['tieneResponsabilidadProveedor'] ?? false) {
+        $out['responsabilidadProveedor'] = (bool)$row['responsabilidad_proveedor'];
+    }
     return $out;
 }
 
@@ -63,6 +73,8 @@ if ($method === 'GET') {
         $sql = "SELECT t.id, t.nombre, t.proveedor_sugerido_id, p.nombre AS proveedor_sugerido_nombre
                 FROM {$tabla} t LEFT JOIN proveedores p ON p.id = t.proveedor_sugerido_id
                 ORDER BY t.nombre";
+    } elseif ($def['tieneResponsabilidadProveedor'] ?? false) {
+        $sql = "SELECT id, nombre, responsabilidad_proveedor FROM {$tabla} ORDER BY nombre";
     } else {
         $sql = "SELECT id, nombre FROM {$tabla} ORDER BY nombre";
     }
@@ -70,7 +82,9 @@ if ($method === 'GET') {
     json_response(array_map(fn($r) => fila_a_json($r, $def), $rows));
 }
 
-require_admin();
+// Alta/edición/baja de catálogos: habilitado para admin y editor (el rol
+// Observador sigue sin poder modificar nada, solo leer para los combos).
+require_writer();
 
 if ($method === 'POST') {
     $body = read_json_body();
@@ -85,6 +99,10 @@ if ($method === 'POST') {
                 ? (int)$body['proveedorSugeridoId'] : null;
             $stmt = db()->prepare("INSERT INTO {$tabla} (nombre, proveedor_sugerido_id) VALUES (?, ?)");
             $stmt->execute([$nombre, $proveedorSugeridoId]);
+        } elseif ($def['tieneResponsabilidadProveedor'] ?? false) {
+            $responsabilidadProveedor = !empty($body['responsabilidadProveedor']) ? 1 : 0;
+            $stmt = db()->prepare("INSERT INTO {$tabla} (nombre, responsabilidad_proveedor) VALUES (?, ?)");
+            $stmt->execute([$nombre, $responsabilidadProveedor]);
         } else {
             $stmt = db()->prepare("INSERT INTO {$tabla} (nombre) VALUES (?)");
             $stmt->execute([$nombre]);
@@ -99,7 +117,10 @@ if ($method === 'POST') {
     $id = (int)db()->lastInsertId();
     $stmt = db()->prepare("SELECT id, nombre FROM {$tabla} WHERE id = ?");
     $stmt->execute([$id]);
-    json_response(fila_a_json($stmt->fetch() + ['proveedor_sugerido_id' => $proveedorSugeridoId ?? null], $def), 201);
+    $row = $stmt->fetch();
+    $row['proveedor_sugerido_id'] = $proveedorSugeridoId ?? null;
+    $row['responsabilidad_proveedor'] = $responsabilidadProveedor ?? 0;
+    json_response(fila_a_json($row, $def), 201);
 }
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -120,6 +141,10 @@ if ($method === 'PUT') {
                 ? (int)$body['proveedorSugeridoId'] : null;
             $stmt = db()->prepare("UPDATE {$tabla} SET nombre = ?, proveedor_sugerido_id = ? WHERE id = ?");
             $stmt->execute([$nombre, $proveedorSugeridoId, $id]);
+        } elseif ($def['tieneResponsabilidadProveedor'] ?? false) {
+            $responsabilidadProveedor = !empty($body['responsabilidadProveedor']) ? 1 : 0;
+            $stmt = db()->prepare("UPDATE {$tabla} SET nombre = ?, responsabilidad_proveedor = ? WHERE id = ?");
+            $stmt->execute([$nombre, $responsabilidadProveedor, $id]);
         } else {
             $stmt = db()->prepare("UPDATE {$tabla} SET nombre = ? WHERE id = ?");
             $stmt->execute([$nombre, $id]);
@@ -134,6 +159,8 @@ if ($method === 'PUT') {
     if ($def['tieneProveedorSugerido']) {
         $sql = "SELECT t.id, t.nombre, t.proveedor_sugerido_id, p.nombre AS proveedor_sugerido_nombre
                 FROM {$tabla} t LEFT JOIN proveedores p ON p.id = t.proveedor_sugerido_id WHERE t.id = ?";
+    } elseif ($def['tieneResponsabilidadProveedor'] ?? false) {
+        $sql = "SELECT id, nombre, responsabilidad_proveedor FROM {$tabla} WHERE id = ?";
     } else {
         $sql = "SELECT id, nombre FROM {$tabla} WHERE id = ?";
     }
@@ -147,9 +174,10 @@ if ($method === 'PUT') {
 }
 
 if ($method === 'DELETE') {
-    $campo = $def['campoActividad'];
-    $stmt = db()->prepare("SELECT COUNT(*) AS n FROM actividades WHERE {$campo} = ?");
-    $stmt->execute([$id]);
+    $campos = (array)$def['campoActividad'];
+    $condicion = implode(' OR ', array_map(fn($c) => "{$c} = ?", $campos));
+    $stmt = db()->prepare("SELECT COUNT(*) AS n FROM actividades WHERE {$condicion}");
+    $stmt->execute(array_fill(0, count($campos), $id));
     $enUso = (int)$stmt->fetch()['n'];
 
     if ($enUso > 0 && $def['obligatorio']) {

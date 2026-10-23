@@ -66,11 +66,12 @@ Abrir `gestion_actividades_mysql.html` en el navegador, iniciar sesión con
 ## Roles de usuario
 
 - **admin**: puede gestionar actividades, los catálogos (Proveedores,
-  Tipos de equipamiento, Inspectores AAyC/VNA, Responsables VNA) y los
-  usuarios.
-- **editor**: puede cargar, editar y eliminar actividades, pero no ve las
-  pestañas "Catálogos" ni "Usuarios", ni puede crear ítems de catálogo
-  nuevos desde el formulario (los botones "+" quedan ocultos).
+  Tipos de equipamiento, Inspectores AAyC/VNA, Responsables VNA, Motivos)
+  y los usuarios.
+- **editor**: puede cargar, editar y eliminar actividades, y también
+  gestionar los catálogos (alta/baja/modificación, incluidos los botones
+  "+" para crear ítems nuevos desde el formulario). La única pestaña que
+  no ve es "Usuarios" (sigue siendo exclusiva de `admin`).
 - **observador**: solo puede recorrer el calendario y el listado de
   actividades, filtrar, y descargar los reportes en Excel/PDF. No ve
   "Catálogos" ni "Usuarios", no tiene el botón "+ Nueva Actividad", y al
@@ -121,16 +122,43 @@ ve como una columna/badge en el listado y como filtro:
 
 | Estado | Cuándo se asigna |
 |---|---|
-| Planificado | Fecha de Inicio es futura y no está cancelada ni finalizada |
+| Planificado | Fecha de Inicio es futura y no está cancelada, reprogramada ni finalizada |
 | En Proceso | Llegó la Fecha de Inicio (es hoy o ya pasó) y no tiene Fecha de Finalización |
 | Finalizado | Se cargó una Fecha de Finalización |
 | Cancelado | Se tildó manualmente "Cancelar esta actividad" en el formulario |
+| Reprogramada | Se reprogramó la actividad (ver más abajo) |
 
 El pasaje de Planificado a En Proceso ocurre solo porque el Estado se
 recalcula en cada lectura contra la fecha de hoy — no hace falta ningún
-proceso en segundo plano. "Cancelado" tiene prioridad sobre los demás: si
-se cancela una actividad ya finalizada, el registro completo se conserva,
-solo cambia la etiqueta.
+proceso en segundo plano. "Cancelado" tiene prioridad sobre "Reprogramada",
+que a su vez tiene prioridad sobre los demás: si se cancela una actividad
+ya finalizada, el registro completo se conserva, solo cambia la etiqueta.
+
+## Catálogo de Motivos, Cancelación y Reprogramación
+
+**Catálogo de Motivos** (pestaña Catálogos): un único catálogo compartido
+para los motivos de Cancelación y de Reprogramación. Cada motivo tiene un
+nombre y un tilde **"Responsabilidad del proveedor"**, para distinguir los
+motivos atribuibles al proveedor contratado de los que no.
+
+**Cancelar una actividad**: al tildar "Cancelar esta actividad" en el
+formulario aparece el campo obligatorio **Motivo de Cancelación**, que se
+completa eligiendo un ítem del catálogo de Motivos (con su propio botón
+"+" para cargar uno nuevo sin salir del formulario).
+
+**Reprogramar una actividad**: disponible como botón **"↻ Reprogramar"**
+en el detalle de una actividad en estado Planificado o En Proceso (no
+disponible para el rol Observador, ni para actividades ya Canceladas,
+Reprogramadas o Finalizadas). Pide **Motivo de Reprogramación** y
+**Nueva Fecha de Inicio** (no puede ser anterior a hoy) y, al confirmar:
+
+- La actividad original pasa a estado **Reprogramada** (se conserva
+  intacta, con su motivo de reprogramación).
+- Se crea una **actividad nueva**, con la nueva Fecha de Inicio y el
+  resto de los datos copiados de la actividad original (proveedor, tipo
+  de equipamiento, descripción, responsable, inspectores, nota de
+  pedido, orden de servicio y comentarios), con una referencia interna a
+  la actividad de origen para poder relacionarlas.
 
 ## Formulario de actividad
 
@@ -152,7 +180,7 @@ En el margen izquierdo de la pestaña **Calendario** se muestran dos
 gráficos de torta con las actividades del mes que se está mostrando (se
 actualizan al navegar entre meses):
 
-- **Por Estado**: Planificado, En Proceso, Finalizado, Cancelado.
+- **Por Estado**: Planificado, En Proceso, Finalizado, Cancelado, Reprogramada.
 - **Por Subcontrato**: Crux Marine, ACG (incluye a "American Consulting"),
   TecPortOne, y el resto de los proveedores agrupados en "Otros".
 

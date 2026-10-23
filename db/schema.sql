@@ -73,6 +73,17 @@ CREATE TABLE responsables_vna (
   nombre  VARCHAR(150) NOT NULL UNIQUE
 ) ENGINE=InnoDB;
 
+-- Motivos de Cancelación y de Reprogramación de actividades. Es un único
+-- catálogo compartido por ambos usos (una actividad cancelada y una
+-- reprogramada pueden elegir el mismo motivo, p. ej. "Condiciones
+-- climáticas"). "responsabilidad_proveedor" indica si ese motivo es
+-- atribuible al proveedor contratado.
+CREATE TABLE motivos (
+  id                        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  nombre                    VARCHAR(150) NOT NULL UNIQUE,
+  responsabilidad_proveedor TINYINT(1)   NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
 -- ----------------------------------------------------------------------------
 -- Actividades (tabla principal)
 --
@@ -92,6 +103,10 @@ CREATE TABLE actividades (
   fecha_inicio          DATE NOT NULL,
   fecha_fin             DATE NULL,
   cancelado             TINYINT(1) NOT NULL DEFAULT 0,
+  reprogramada          TINYINT(1) NOT NULL DEFAULT 0,
+  motivo_cancelacion_id    INT UNSIGNED NULL,
+  motivo_reprogramacion_id INT UNSIGNED NULL,
+  reprogramada_de_id       INT UNSIGNED NULL,
   proveedor_id          INT UNSIGNED NOT NULL,
   tipo_equipamiento_id  INT UNSIGNED NOT NULL,
   descripcion           TEXT NOT NULL,
@@ -123,6 +138,15 @@ CREATE TABLE actividades (
     ON DELETE SET NULL ON UPDATE CASCADE,
   CONSTRAINT fk_act_creado_por
     FOREIGN KEY (creado_por) REFERENCES usuarios(id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_act_motivo_cancelacion
+    FOREIGN KEY (motivo_cancelacion_id) REFERENCES motivos(id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_act_motivo_reprogramacion
+    FOREIGN KEY (motivo_reprogramacion_id) REFERENCES motivos(id)
+    ON DELETE SET NULL ON UPDATE CASCADE,
+  CONSTRAINT fk_act_reprogramada_de
+    FOREIGN KEY (reprogramada_de_id) REFERENCES actividades(id_actividad)
     ON DELETE SET NULL ON UPDATE CASCADE,
 
   INDEX idx_act_fecha (fecha_inicio),
@@ -162,3 +186,9 @@ INSERT INTO inspectores_vna (nombre) VALUES
 INSERT INTO responsables_vna (nombre) VALUES
   ('Juan Pérez'),
   ('Laura Díaz');
+
+INSERT INTO motivos (nombre, responsabilidad_proveedor) VALUES
+  ('Condiciones climáticas', 0),
+  ('Falta de disponibilidad del proveedor', 1),
+  ('Falla de equipo', 1),
+  ('Solicitud de VNA', 0);
