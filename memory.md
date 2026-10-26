@@ -127,7 +127,22 @@ Monitoreo Remoto, Equipamiento de Campo, Boyas Multiparamétricas y SiMon.
   estado **Reprogramada** (nuevo estado, quinto además de Planificado/En
   Proceso/Finalizado/Cancelado) y se crea una actividad nueva con la
   nueva fecha, los mismos datos, y una referencia a la actividad origen.
-  Todo esto corre dentro de una transacción en el backend.
+  Todo esto corre dentro de una transacción en el backend. El botón "↻
+  Reprogramar" tiene fondo amarillo suave para distinguirlo del resto.
+- En el selector de **Tipo de Mantenimiento** (Nueva Actividad), las
+  opciones no seleccionadas se ven con colores menos atenuados que antes
+  (opacidad .75 en vez de .4), y la opción elegida muestra el punto de
+  selección (radio) con relleno sólido (antes dependía del navegador).
+- En la pestaña **Calendario**, debajo de los dos gráficos de torta hay un
+  tercer gráfico de **barras**: "Performance de Subcontratos" (Crux
+  Marine, ACG, TecPortOne — no incluye "Otros"). Por cada uno, sobre las
+  actividades del mes que se está mostrando: `1 − ((reprogramadas por
+  responsabilidad del proveedor + canceladas por responsabilidad del
+  proveedor) / total de actividades de ese subcontrato ese mes)`. Una
+  actividad cuenta en contra solo si su motivo (de Cancelación o de
+  Reprogramación) tiene tildada "Responsabilidad del proveedor" en el
+  catálogo de Motivos. Barra verde (≥80%), ámbar (50–79%) o roja (<50%);
+  "Sin datos" si no hubo actividades ese mes para ese subcontrato.
 - Pendiente: desplegar esta variante en un hosting real (la sesión de
   trabajo es un contenedor temporal sin MySQL persistente); decidir si el
   stack final es PHP (como está armado) u otra cosa si el hosting elegido

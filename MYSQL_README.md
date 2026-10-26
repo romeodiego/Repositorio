@@ -147,7 +147,8 @@ completa eligiendo un ítem del catálogo de Motivos (con su propio botón
 "+" para cargar uno nuevo sin salir del formulario).
 
 **Reprogramar una actividad**: disponible como botón **"↻ Reprogramar"**
-en el detalle de una actividad en estado Planificado o En Proceso (no
+(fondo amarillo suave) en el detalle de una actividad en estado
+Planificado o En Proceso (no
 disponible para el rol Observador, ni para actividades ya Canceladas,
 Reprogramadas o Finalizadas). Pide **Motivo de Reprogramación** y
 **Nueva Fecha de Inicio** (no puede ser anterior a hoy) y, al confirmar:
@@ -186,6 +187,22 @@ actualizan al navegar entre meses):
 
 Si el mes mostrado no tiene actividades cargadas, cada gráfico muestra el
 mensaje "Sin actividades este mes" en lugar de un gráfico vacío.
+
+Debajo de esos dos gráficos hay un tercero, de barras: **Performance de
+Subcontratos**, para Crux Marine, ACG y TecPortOne (no incluye "Otros").
+Por cada uno, sobre las actividades del mes que se está mostrando:
+
+```
+Performance = 1 − ( (reprogramadas por responsabilidad del proveedor
+                      + canceladas por responsabilidad del proveedor)
+                     / total de actividades de ese subcontrato ese mes )
+```
+
+Una actividad "cuenta en contra" solo si su motivo de Cancelación o de
+Reprogramación tiene tildada "Responsabilidad del proveedor" en el
+catálogo de Motivos. La barra se colorea según el resultado: verde
+(≥80%), ámbar (50–79%) o rojo (<50%). Si un subcontrato no tuvo
+actividades ese mes, se muestra "Sin datos" en lugar de una barra.
 
 La semana del calendario empieza en **lunes** (Lun a Dom). Las pestañas
 **Calendario** y **Detalle de Actividades** ocupan el ancho completo de

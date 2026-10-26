@@ -70,6 +70,8 @@
   .btn-light:hover{background:#f2f7f9;}
   .btn-danger{background:#fdecef;color:var(--danger);}
   .btn-danger:hover{background:var(--danger);color:#fff;}
+  .btn-warning{background:#ffe9a8;color:#7a5c00;}
+  .btn-warning:hover{background:#f4a261;color:#fff;}
   .btn-ghost{background:transparent;color:var(--primary-light);padding:6px 10px;}
   .btn-ghost:hover{background:#eaf6f9;}
   .btn-sm{padding:5px 10px;font-size:12px;border-radius:6px;}
@@ -115,6 +117,14 @@
   .chart-legend-row .lbl{color:var(--text);flex:1;}
   .chart-legend-row .val{color:var(--text-muted);font-variant-numeric:tabular-nums;white-space:nowrap;}
   .chart-empty{text-align:center;color:var(--text-muted);font-size:11.5px;padding:34px 0;}
+
+  .perf-bars{display:flex;flex-direction:column;gap:12px;}
+  .perf-bar-row{display:flex;flex-direction:column;gap:4px;}
+  .perf-bar-label{display:flex;justify-content:space-between;align-items:baseline;font-size:11.5px;color:var(--text);}
+  .perf-bar-label .val{font-weight:700;font-variant-numeric:tabular-nums;}
+  .perf-bar-track{background:var(--bg);border:1px solid var(--border);border-radius:5px;height:11px;overflow:hidden;}
+  .perf-bar-fill{height:100%;border-radius:5px 0 0 5px;transition:width .2s;}
+  .perf-bar-empty{color:var(--text-muted);font-size:11px;}
 
   @media (max-width:860px){
     .calendar-layout{flex-direction:column;}
@@ -252,10 +262,15 @@
   .form-grid label.tipo-mant-option{
     display:flex;align-items:center;gap:7px;padding:7px 16px;border-radius:20px;
     cursor:pointer;font-weight:800;font-size:13px;text-transform:none;letter-spacing:0;
-    color:#000;opacity:.4;transition:opacity .15s,box-shadow .15s;
+    color:#000;opacity:.75;transition:opacity .15s,box-shadow .15s;
   }
   .tipo-mant-option.is-checked{opacity:1;box-shadow:0 2px 6px rgba(0,0,0,.25);}
-  .tipo-mant-option input{width:auto;accent-color:#fff;}
+  .tipo-mant-option input{
+    -webkit-appearance:none;appearance:none;width:15px;height:15px;margin:0;flex-shrink:0;
+    border-radius:50%;border:2px solid rgba(0,0,0,.45);background:transparent;cursor:pointer;
+    transition:background .15s,border-color .15s;
+  }
+  .tipo-mant-option input:checked{background:#000;border-color:#000;}
   .tipo-mant-preventivo{background:var(--accent-dark);}
   .tipo-mant-correctivo{background:var(--danger);}
   .tipo-mant-evolutivo{background:var(--primary-light);}
@@ -399,6 +414,10 @@
             <div class="pie" id="chartSubcontratoPie"></div>
           </div>
           <div class="chart-legend" id="chartSubcontratoLegend"></div>
+        </div>
+        <div class="chart-card">
+          <h4 id="chartPerformanceTitle">Performance de Subcontratos</h4>
+          <div class="perf-bars" id="chartPerformanceBars"></div>
         </div>
       </div>
       <div class="calendar-main">
@@ -724,7 +743,7 @@
       <div class="modal-footer">
         <div class="left">
           <button type="button" class="btn-danger" id="btnDelete" style="display:none;">Eliminar</button>
-          <button type="button" class="btn-light" id="btnReprogramar" style="display:none;" data-writer-only>↻ Reprogramar</button>
+          <button type="button" class="btn-warning" id="btnReprogramar" style="display:none;" data-writer-only>↻ Reprogramar</button>
         </div>
         <div class="right">
           <button type="button" class="btn-light" id="btnPdfSingle" style="display:none;">⬇ Descargar PDF</button>
@@ -943,6 +962,7 @@
    "btnPrevMonth","btnNextMonth","btnToday","calTitle","calGrid",
    "chartEstadoTitle","chartEstadoPie","chartEstadoLegend",
    "chartSubcontratoTitle","chartSubcontratoPie","chartSubcontratoLegend",
+   "chartPerformanceTitle","chartPerformanceBars",
    "fSearch","fTipoMant","fEstado","fTipoEquipo","fDesde","fHasta","btnClearFilters",
    "listCount","btnPdfList","tableBody","emptyState",
    "listPagination","btnListPrevPage","btnListNextPage","listPageInfo",
@@ -1460,10 +1480,51 @@
     }).join("");
   }
 
+  function motivoEsResponsabilidadProveedor(nombreMotivo){
+    if(!nombreMotivo) return false;
+    var motivo = state.motivos.find(function(m){ return m.nombre === nombreMotivo; });
+    return !!(motivo && motivo.responsabilidadProveedor);
+  }
+
+  function performanceColor(pct){
+    if(pct >= 80) return "#049c74";
+    if(pct >= 50) return "#f4a261";
+    return "#ef476f";
+  }
+
+  function renderPerformanceBars(delMes){
+    var subcontratos = ["Crux Marine", "ACG", "TecPortOne"];
+    var totales = {}, problemas = {};
+    subcontratos.forEach(function(s){ totales[s] = 0; problemas[s] = 0; });
+
+    delMes.forEach(function(r){
+      var bucket = subcontratoBucket(r.proveedor);
+      if(totales[bucket] === undefined) return; // "Otros" no entra en este gráfico
+      totales[bucket]++;
+      if(r.estado === "Reprogramada" && motivoEsResponsabilidadProveedor(r.motivoReprogramacion)) problemas[bucket]++;
+      else if(r.estado === "Cancelado" && motivoEsResponsabilidadProveedor(r.motivoCancelacion)) problemas[bucket]++;
+    });
+
+    els.chartPerformanceBars.innerHTML = subcontratos.map(function(s){
+      var total = totales[s];
+      if(total === 0){
+        return '<div class="perf-bar-row">' +
+          '<div class="perf-bar-label"><span>' + esc(s) + '</span><span class="perf-bar-empty">Sin datos</span></div>' +
+        '</div>';
+      }
+      var pct = Math.round((1 - (problemas[s] / total)) * 100);
+      return '<div class="perf-bar-row">' +
+        '<div class="perf-bar-label"><span>' + esc(s) + '</span><span class="val">' + pct + '%</span></div>' +
+        '<div class="perf-bar-track"><div class="perf-bar-fill" style="width:' + pct + '%;background:' + performanceColor(pct) + ';"></div></div>' +
+      '</div>';
+    }).join("");
+  }
+
   function renderCharts(){
     var y = state.calYear, m = state.calMonth;
     els.chartEstadoTitle.textContent = "Estado · " + MONTH_NAMES[m] + " " + y;
     els.chartSubcontratoTitle.textContent = "Subcontrato · " + MONTH_NAMES[m] + " " + y;
+    els.chartPerformanceTitle.textContent = "Performance · " + MONTH_NAMES[m] + " " + y;
 
     var delMes = state.records.filter(function(r){
       var d = new Date(r.fechaInicio + "T00:00:00");
@@ -1482,6 +1543,7 @@
       ["Planificado", "En Proceso", "Finalizado", "Cancelado", "Reprogramada"]);
     renderPieChart(els.chartSubcontratoPie, els.chartSubcontratoLegend, subcontratoCounts, SUBCONTRATO_COLORS,
       ["Crux Marine", "ACG", "TecPortOne", "Otros"]);
+    renderPerformanceBars(delMes);
   }
 
   els.btnPrevMonth.addEventListener("click", function(){
